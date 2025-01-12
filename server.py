@@ -40,5 +40,24 @@ def start_server():
     client_handler = threading.Thread(target=handle_client, args=(client_socket, address))
     client_handler.start()
 
+
+
+# functions planned to be implemented
+
+# start(botname) # starts given bot
+
+
+# stop(botname) # stops given bot
+
+
+# update(botname) # pulls latest changes from git
+  # checks if bot is online first, if so, stop(botname)
+  
+# checkdata(botname) # displays current data for all servers.
+  # display all servers
+  # give option to display data of a specific server
+
+# end of planned functions
+
 if __name__ == "__main__":
   start_server()
