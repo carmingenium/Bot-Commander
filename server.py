@@ -44,6 +44,13 @@ def start_server():
 
 # functions planned to be implemented
 
+# constant active function: show_status() # displays current status of all bots
+
+
+# add(botname, location) # adds a new bot to the server
+  # check if bot already exists
+
+
 # start(botname) # starts given bot
 
 
