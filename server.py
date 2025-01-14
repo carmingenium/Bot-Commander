@@ -1,10 +1,17 @@
 import socket
 import threading
+# DATABASE START # PLANNING TO SETUP DATABASE PART IN ANOTHER SCRIPT TO MODULARIZE TWO PARTS OF THE CODE, PLUS HOPING TO HAVE EASIER TIME TESTING
+import sqlite3
+from sqlite3 import Error
+# DATABASE END
 
+# Variables
 HOST = '0.0.0.0'  # Bind to all interfaces
 PORT = 12332
 global server_socket
 global botlist
+global dbconnection
+# Variables end
 
 # Server needs to be accessible from anywhere, so we use '0.0.0.0' as the host to bind to all available interfaces.
 def start_server():
@@ -87,7 +94,7 @@ def main():
 
 main()
 
-# TBD: 1-) Database setup, connection
+# TBD: 1-) Database setup, connection (SQLite)
 #      2-) Data check function
 #      3-) Adding, starting, stopping bots
 #      4-) Status update function
