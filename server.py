@@ -4,9 +4,9 @@
 import socket
 import threading
 
-# Server needs to be accessible from anywhere, so we use '' as the host to bind to all available interfaces.
+# Server needs to be accessible from anywhere, so we use '0.0.0.0' as the host to bind to all available interfaces.
 def start_server():
-  HOST = ''  # Bind to all interfaces
+  HOST = '0.0.0.0'  # Bind to all interfaces
   PORT = 12332  # Choose a port that is not commonly used
 
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
