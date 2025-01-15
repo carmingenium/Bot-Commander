@@ -11,7 +11,18 @@ PORT = 12332
 global server_socket
 global botlist
 global dbconnection
+global clientlist
 # Variables end
+
+# Bot class for testing
+class Bot:
+  name = ""
+  status = ""
+  def __init__(self, name, status):
+    self.name = name
+    self.status = status
+
+
 
 # Server needs to be accessible from anywhere, so we use '0.0.0.0' as the host to bind to all available interfaces.
 def start_server():
@@ -22,10 +33,14 @@ def start_server():
 
   print(f"Server started on port {PORT}. Waiting for connections...")
   # listener done.
+  
   # connecting to database
   # load botlist -string list- from database.
   
-  return server_socket
+  # for now, botlist is going to be manually set, because database implementation moved to last step.
+  botlist = ["AM"]
+  
+  return server_socket, botlist
 
 # Function to handle client connections
 def handle_client(client_socket, address):
@@ -48,38 +63,76 @@ def handle_client(client_socket, address):
     client_socket.close()
 
 
-def add(botname, location):
-  print(f"Adding bot {botname} at {location}")
+def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
+  print(f"Adding bot {botname}")
+  # send this print to client also
   
-def start(botname):
-  print(f"Starting bot {botname}")
-
-# functions planned to be implemented
-
-# constant active function: show_status() # displays current status of all bots
-
-
-# add(botname, location) # adds a new bot to the server
   # check if bot already exists
-
-
-# start(botname) # starts given bot
-
-
-# stop(botname) # stops given bot
-
-
-# update(botname) # pulls latest changes from git
-  # checks if bot is online first, if so, stop(botname)
+  #   if exists, return error
+  #   else, add to  database and refresh database variable
   
-# checkdata(botname) # displays current data for all servers.
-  # display all servers
-  # give option to display data of a specific server
+def remove(botname, client):
+  print(f"Removing bot {botname}")
+  # send this print to client also
+  
+  # check if bot exists
+  #   if not, return error
+  # check if bot is online
+  #   if online, return error
+  # remove bot from database and refresh database variable
+  
+def start(botname, client):
+  print(f"Starting bot {botname}")
+  # send this print to client also
+  
+  # check if bot exists
+  #   if not, return error
+  # check if bot is online
+  #   if online, return error
+  # start bot
 
-# end of planned functions
+def stop(botname, client):
+  print(f"Stopping bot {botname}")
+  # send this print to client also
+  
+  # check if bot exists
+  #   if not, return error
+  # check if bot is offline
+  #   if offline, return error
+  # stop bot
+
+def update(botname, client):
+  print(f"Updating bot {botname}")
+  # send this print to client also
+  
+  # check if bot exists
+  #   if not, return error
+  # check if bot is online
+  #   if online, stop bot
+  # update bot from github
+  
+def checkdata(botname, client):
+  print(f"Checking data for bot {botname}")
+  # send this print to client also
+  
+  # check if bot exists
+  #   if not, return error
+  # check if bot is online
+  #   if offline, return error
+  # get data of bot from database
+  # send client all the server names of the server data
+  # give option to display data of a specific server
+  # COULD LATER ADD CODE THAT SPESIFIES WHICH SERVERS DATA CAN BE REQUESTED FROM SPESIFIC CLIENTS FOR SECURITY.
+
+def show_status(clientlist):
+  # show online / offline status 
+  # status will be changed on database by the bots, on status change this function needs to rerun to update the status.
+
+  return
+  
 def main():
   if __name__ == "__main__":
-    server_socket = start_server()
+    server_socket, botlist = start_server()
   else:
     print("Server failed to start, used by another module. Exiting...")
     return
@@ -94,8 +147,10 @@ def main():
 
 main()
 
-# TBD: 1-) Database setup, connection (SQLite)
-#      2-) Data check function
-#      3-) Adding, starting, stopping bots
-#      4-) Status update function
-#      5-) Update bots
+# TBD:
+#      1-) Adding, starting, stopping bots
+#      2-) Status update function
+#      3-) Update bots
+#      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
+#      4-) Database setup, connection (SQLite)
+#      5-) Data check function

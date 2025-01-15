@@ -1,7 +1,10 @@
-# CLIENT CODE
-# client.py
-
 import socket
+import threading
+
+# UI PART #
+# When no other function is active, only result of this function should be shown on the screen (just status for every bot)
+# when any other function is active, program should be a black screen with only results from active function and input of the client.
+# this UI should be on the client.
 
 def start_client(server_ip):
   PORT = 12332
