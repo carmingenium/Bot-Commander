@@ -29,7 +29,7 @@ def start_server():
   # creating listener socket.
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   server_socket.bind((HOST, PORT))
-  server_socket.listen(5)  # Allow up to 5 connections
+  server_socket.listen(2)  # Allow up to 2 connections
 
   print(f"Server started on port {PORT}. Waiting for connections...")
   # listener done.
@@ -38,7 +38,7 @@ def start_server():
   # load botlist -string list- from database.
   
   # for now, botlist is going to be manually set, because database implementation moved to last step.
-  botlist = ["AM"]
+  botlist = ["AM.py"] # for tests, this place can be set empty or not.
   
   return server_socket, botlist
 
@@ -66,11 +66,36 @@ def handle_client(client_socket, address):
 def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
   print(f"Adding bot {botname}")
   # send this print to client also
-  
+  client.send(f"Adding bot {botname}".encode('utf-8'))
   # check if bot already exists
-  #   if exists, return error
-  #   else, add to  database and refresh database variable
+  if(botname in botlist):   #   if exists, return error
+    print("Bot already exists.")
+    # send this print to client also
+    client.send("Bot already exists.".encode('utf-8'))
+    return
+  # else, add to database and refresh database variable
+  if (botname[-3:] != ".py"): # check if .py is in the name.
+    botname = botname + ".py"
+  botlist.append(botname)
+  # refresh database
+  print(f"Added bot {botname}")
+  # send this print to client also
+  client.send(f"Added bot {botname}".encode('utf-8'))
+  return
   
+def change(botname, newbotname, client):
+  print(f"Changing bot {botname} to {newbotname}")
+  # send this print to client also
+  
+  # check if bot exists
+  #   if not, return error
+  # check if bot is online
+  #   if online, return error
+  # change bot name in database and refresh database variable
+  print(f"Changed bot {botname} to {newbotname}")
+  # send this print to client also
+  return
+
 def remove(botname, client):
   print(f"Removing bot {botname}")
   # send this print to client also
@@ -146,7 +171,6 @@ def main():
     
 
 main()
-
 # TBD:
 #      1-) Adding, starting, stopping bots
 #      2-) Status update function

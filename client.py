@@ -6,9 +6,10 @@ import threading
 # when any other function is active, program should be a black screen with only results from active function and input of the client.
 # this UI should be on the client.
 
+# LOGIC #
+# Client can only receive after client sends a message. need to separate listener logic.
 def start_client(server_ip):
   PORT = 12332
-
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   try:
     client_socket.connect((server_ip, PORT))
