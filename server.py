@@ -62,7 +62,6 @@ def handle_client(client_socket, address):
     print(f"Connection with {address} closed.")
     client_socket.close()
 
-
 def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
   print(f"Adding bot {botname}")
   # send this print to client also
@@ -88,12 +87,21 @@ def change(botname, newbotname, client):
   # send this print to client also
   
   # check if bot exists
-  #   if not, return error
+  if(botname not in botlist):
+    # if not, return error   
+    print("Bot does not exist.")
+    # send this print to client also
+    client.send("Bot does not exist.".encode('utf-8'))
+    return
   # check if bot is online
   #   if online, return error
+
   # change bot name in database and refresh database variable
+  # maybe new functions for database interactions?
+
   print(f"Changed bot {botname} to {newbotname}")
   # send this print to client also
+  client.send(f"Changed bot {botname} to {newbotname}".encode('utf-8'))
   return
 
 def remove(botname, client):
