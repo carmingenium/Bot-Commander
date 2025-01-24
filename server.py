@@ -1,9 +1,14 @@
+# Main #
+import time
 import socket
 import threading
 # DATABASE START # PLANNING TO SETUP DATABASE PART IN ANOTHER SCRIPT TO MODULARIZE TWO PARTS OF THE CODE, PLUS HOPING TO HAVE EASIER TIME TESTING
 import sqlite3
 from sqlite3 import Error
 # DATABASE END
+# UI #
+from colorama import Fore
+
 
 # Variables
 HOST = '0.0.0.0'  # Bind to all interfaces
@@ -21,6 +26,10 @@ class Bot:
   def __init__(self, name, status):
     self.name = name
     self.status = status
+  def get_name(self):
+    return self.name
+  def get_status(self):
+    return self.status
 
 
 
@@ -41,6 +50,15 @@ def start_server():
   botlist = ["AM.py"] # for tests, this place can be set empty or not.
   
   return server_socket, botlist
+
+# Function to accept clients - listener
+def accept_clients(server_socket):
+  while True: # Keep the server running, listening for clients
+    # create a new thread for every client, for automatic status update.
+    # start show_status() and create the list of activebotlist -string list-.
+    client_socket, address = server_socket.accept()
+    client_handler = threading.Thread(target=handle_client, args=(client_socket, address)) # new thread for every client
+    client_handler.start()
 
 # Function to handle client connections
 def handle_client(client_socket, address):
@@ -64,22 +82,26 @@ def handle_client(client_socket, address):
 
 def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
   print(f"Adding bot {botname}")
-  # send this print to client also
   response_message(client, (f"Adding bot {botname}".encode('utf-8')))
+
   # check if bot already exists
   if(botname in botlist):   #   if exists, return error
     print("Bot already exists.")
-    # send this print to client also
     response_message(client,"Bot already exists.".encode('utf-8'))
     return
+  
+  # around here need to add a system that checks for the github page or the file to find the actual bot.
+  # and manage to run it without errors.
+
   # else, add to database and refresh database variable
   if (botname[-3:] != ".py"): # check if .py is in the name.
     botname = botname + ".py"
   botlist.append(botname)
   # add to database 
   # refresh database variable (sync with database)
+
+
   print(f"Added bot {botname}")
-  # send this print to client also
   response_message(client ,f"Added bot {botname}".encode('utf-8'))
   return
   
@@ -158,11 +180,17 @@ def checkdata(botname, client):
   # give option to display data of a specific server
   # COULD LATER ADD CODE THAT SPESIFIES WHICH SERVERS DATA CAN BE REQUESTED FROM SPESIFIC CLIENTS FOR SECURITY.
 
-def show_status(clientlist):
+def show_status(clientlist, botlist):
   # show online / offline status 
-  # status will be changed on database by the bots, on status change this function needs to rerun to update the status.
 
-  return
+  # status will be changed on database by the bots,
+  # on status change this function needs to rerun to update the status.
+  status = ""
+  for bot in botlist:
+    status += f"{bot.name}: {bot.status}\n" # need to colorize and make pretty later on
+  for client in clientlist:
+    status_message(client, status) 
+  return 
   
 # Message type definition
 def echo_message(client, message):
@@ -189,19 +217,37 @@ def main():
     print("Server failed to start, used by another module. Exiting...")
     return
   
-  while True: # Keep the server running, listening for clients
-    # create a new thread for automatic status update.
-    # start show_status() and create the list of activebotlist -string list-.
-    client_socket, address = server_socket.accept()
-    client_handler = threading.Thread(target=handle_client, args=(client_socket, address)) # new thread for every client
-    client_handler.start()
+  # setting up listener thread separately from main thread.
+  client_accepter = threading.Thread(target=accept_clients, args=(server_socket,))
+  client_accepter.start()
+
+  # setup a current state for bots
+  statelist = []
+  for bot in botlist:
+    statelist.append(Bot(bot, bot.status))
+
+  # bot status checking and updating loop
+  while True:
+    # separated listeners from main thread to check bot changes every x seconds.
+    # wait x seconds
+    time.sleep(15)
+    # bot checking functionality (not defined, not used anywhere else)
+    for bot in botlist:
+      if bot.status != statelist[botlist.index(bot)].status: # might create error
+        # update botlist
+        statelist[botlist.index(bot)].status = bot.status
+        # update bot status for every client.
+        show_status(clientlist, botlist)
+        pass
+      else:
+        pass
     
 
 main()
 # TBD:
 #      1-) Adding, starting, stopping bots
-#      2-) Status update function
+#      2-) Status update function DONE 
 #      3-) Update bots
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
-#      4-) Database setup, connection (SQLite)
+#      4-) Database setup, connection (SQLite (?))
 #      5-) Data check function

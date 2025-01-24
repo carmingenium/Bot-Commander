@@ -1,5 +1,7 @@
 import socket
 import threading
+# UI #
+from colorama import Fore
 
 # UI PART #
 # When no other function is active, only result of this function should be shown on the screen (just status for every bot)
