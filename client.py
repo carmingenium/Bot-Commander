@@ -5,7 +5,7 @@ import threading
 # When no other function is active, only result of this function should be shown on the screen (just status for every bot)
 # when any other function is active, program should be a black screen with only results from active function and input of the client.
 # this UI should be on the client.
-
+# there could be a list of keywords defined to understand which type of message is being sent from the server (echo, error, status, reaction, etc.)
 
 def listener(client_socket):
   print(f"Starting listener.")
