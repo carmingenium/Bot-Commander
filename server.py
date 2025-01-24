@@ -2,6 +2,7 @@
 import time
 import socket
 import threading
+import subprocess
 # DATABASE START # PLANNING TO SETUP DATABASE PART IN ANOTHER SCRIPT TO MODULARIZE TWO PARTS OF THE CODE, PLUS HOPING TO HAVE EASIER TIME TESTING
 import sqlite3
 from sqlite3 import Error
@@ -18,6 +19,18 @@ global botlist
 global dbconnection
 global clientlist
 # Variables end
+
+
+
+
+def run_script_external(script_path):
+  """Executes a Python script as a separate process."""
+  try:
+    subprocess.run(["python", script_path], check=True)
+    return "Script executed successfully."
+  except subprocess.CalledProcessError as e:
+    return f"Error executing script: {e.stderr}"
+
 
 # Bot class for testing
 class Bot:
@@ -90,7 +103,7 @@ def handle_client(client_socket, address):
     print(f"Connection with {address} closed.")
     client_socket.close()
 
-def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
+def add(botname, client, botlist): # adds a new bot to the botlist and therefore botcommander.
   print(f"Adding bot {botname}")
   response_message(client, (f"Adding bot {botname}".encode('utf-8')))
 
@@ -147,15 +160,31 @@ def remove(botname, client):
   #   if online, return error
   # remove bot from database and refresh database variable
   
-def start(botname, client):
+def start(botname, client, botlist):
   print(f"Starting bot {botname}")
-  # send this print to client also
+  echo_message(client, f"Starting bot {botname}")
   
-  # check if bot exists
-  #   if not, return error
-  # check if bot is online
-  #   if online, return error
-  # start bot
+  try:
+    # check if bot exists
+    if (botname not in botlist):
+      #   if not, return error
+      print("Bot does not exist.")
+      response_message(client, "Bot does not exist.".encode('utf-8'))
+      return
+    startingbot = botlist[botlist.index(botname)]
+    # check if bot is online
+    if (startingbot.get_status() == "online"):
+      #   if online, return error
+      print("Bot is already online.")
+      response_message(client, "Bot is already online.".encode('utf-8'))
+      return
+    # start bot
+    err = run_script_external(startingbot.get_location())
+    if (err != "Script executed successfully."):
+      raise Exception(err)    
+  except Exception as e:
+    print(f"Error starting bot {botname}: {e}")
+  
 
 def stop(botname, client):
   print(f"Stopping bot {botname}")
@@ -257,8 +286,8 @@ def main():
 
 main()
 # TBD:
-#      1-) Adding, starting, stopping bots
-#      2-) Status update function DONE 
+#      1-) Adding, starting, stopping bots    ADD half done, START DONE, STOP not done
+#      2-) Status update function             DONE 
 #      3-) Update bots
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      4-) Database setup, connection (SQLite (?))

@@ -13,7 +13,7 @@ from colorama import Fore
 # (echo, error, status, response, etc.)
 testlist = ["echo", "erro", "stat", "resp"] # keeping them 4 letters for ease of use
 
-def handle_recv(client_socket, msg):
+def handle_recv(client_socket, msg): # maybe this parts actually useless and all the categorization and formatting can be done on server ????????????
   msgtype = msg[:4]
   if msgtype in testlist:
     print(f"Message type: {msgtype}")
