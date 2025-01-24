@@ -16,16 +16,17 @@ def handle_recv(client_socket, msg):
   if msgtype in testlist:
     print(f"Message type: {msgtype}")
     if msgtype == "echo":
-      print(f"Echo: {msg[5:]}")
+      print(f"Echo: {msg[4:]}")
 
     elif msgtype == "erro":
-      print(f"Error message from server: {msg[5:]}")
+      print(f"Error message from server: {msg[4:]}")
 
     elif msgtype == "stat":
-      print(f"Status message: {msg[5:]}")
+      # this part needs to be formatted, after status update function is done on server side.
+      print(f"Status update: {msg[4:]}")
 
     elif msgtype == "resp":
-      print(f"Response message: {msg[5:]}")
+      print(f"Response message: {msg[4:]}")
 
 
   else:

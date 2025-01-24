@@ -76,7 +76,8 @@ def add(botname, client): # adds a new bot to the botlist and therefore botcomma
   if (botname[-3:] != ".py"): # check if .py is in the name.
     botname = botname + ".py"
   botlist.append(botname)
-  # refresh database
+  # add to database 
+  # refresh database variable (sync with database)
   print(f"Added bot {botname}")
   # send this print to client also
   response_message(client ,f"Added bot {botname}".encode('utf-8'))
