@@ -242,13 +242,18 @@ def main():
     # wait x seconds
     time.sleep(15)
     # bot checking functionality (not defined, not used anywhere else)
+    check = False
     for bot in botlist:
       if bot.status != statelist[botlist.index(bot)].status: # might create error
+        # update check
+        check = True
         # update botlist
         statelist[botlist.index(bot)].status = bot.status
         # update bot status for every client.
-        show_status(clientlist, botlist)
         pass
+    if (check):
+      show_status(clientlist, botlist)
+      check = False
 
 main()
 # TBD:
