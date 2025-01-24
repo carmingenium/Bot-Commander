@@ -23,13 +23,23 @@ global clientlist
 class Bot:
   name = ""
   status = ""
-  def __init__(self, name, status):
+  location = ""
+  def __init__(self, name, status, location):
     self.name = name
     self.status = status
+    self.location = location
   def get_name(self):
     return self.name
   def get_status(self):
     return self.status
+  def get_location(self):
+    return self.location
+  def update_bot(self, name, location):
+    self.name = name
+    self.status = "offline"
+    self.location = location
+  def update_status(self, status):
+    self.status = status
 
 
 
@@ -239,9 +249,6 @@ def main():
         # update bot status for every client.
         show_status(clientlist, botlist)
         pass
-      else:
-        pass
-    
 
 main()
 # TBD:
