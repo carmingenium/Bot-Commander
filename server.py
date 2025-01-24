@@ -55,7 +55,7 @@ def handle_client(client_socket, address):
 
       # Echo the message back
       response = f"Echo: {data}"
-      client_socket.send(response.encode('utf-8'))
+      echo_message(client_socket, response.encode('utf-8'))
   except Exception as e:
     print(f"Error with client {address}: {e}")
   finally:
@@ -65,12 +65,12 @@ def handle_client(client_socket, address):
 def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
   print(f"Adding bot {botname}")
   # send this print to client also
-  client.send(f"Adding bot {botname}".encode('utf-8'))
+  response_message(client, (f"Adding bot {botname}".encode('utf-8')))
   # check if bot already exists
   if(botname in botlist):   #   if exists, return error
     print("Bot already exists.")
     # send this print to client also
-    client.send("Bot already exists.".encode('utf-8'))
+    response_message(client,"Bot already exists.".encode('utf-8'))
     return
   # else, add to database and refresh database variable
   if (botname[-3:] != ".py"): # check if .py is in the name.
@@ -79,19 +79,19 @@ def add(botname, client): # adds a new bot to the botlist and therefore botcomma
   # refresh database
   print(f"Added bot {botname}")
   # send this print to client also
-  client.send(f"Added bot {botname}".encode('utf-8'))
+  response_message(client ,f"Added bot {botname}".encode('utf-8'))
   return
   
 def change(botname, newbotname, client):
   print(f"Changing bot {botname} to {newbotname}")
-  # send this print to client also
-  
+  response_message(client, f"Changing bot {botname} to {newbotname}".encode('utf-8'))
+
   # check if bot exists
   if(botname not in botlist):
     # if not, return error   
     print("Bot does not exist.")
     # send this print to client also
-    client.send("Bot does not exist.".encode('utf-8'))
+    response_message(client,"Bot does not exist.".encode('utf-8'))
     return
   # check if bot is online
   #   if online, return error
@@ -101,12 +101,12 @@ def change(botname, newbotname, client):
 
   print(f"Changed bot {botname} to {newbotname}")
   # send this print to client also
-  client.send(f"Changed bot {botname} to {newbotname}".encode('utf-8'))
+  response_message(client,f"Changed bot {botname} to {newbotname}".encode('utf-8'))
   return
 
 def remove(botname, client):
   print(f"Removing bot {botname}")
-  # send this print to client also
+  response_message(client, f"Removing bot {botname}".encode('utf-8'))
   
   # check if bot exists
   #   if not, return error
@@ -163,6 +163,24 @@ def show_status(clientlist):
 
   return
   
+# Message type definition
+def echo_message(client, message):
+  client.send(f"echo{message}".encode('utf-8'))
+  return
+def error_message(client, message):
+  client.send(f"erro{message}".encode('utf-8'))
+  return
+def status_message(client, message):
+  client.send(f"stat{message}".encode('utf-8'))
+  return
+def response_message(client, message):
+  client.send(f"resp{message}".encode('utf-8'))
+  return
+
+
+
+
+
 def main():
   if __name__ == "__main__":
     server_socket, botlist = start_server()

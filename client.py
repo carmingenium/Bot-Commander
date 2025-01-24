@@ -5,14 +5,41 @@ import threading
 # When no other function is active, only result of this function should be shown on the screen (just status for every bot)
 # when any other function is active, program should be a black screen with only results from active function and input of the client.
 # this UI should be on the client.
-# there could be a list of keywords defined to understand which type of message is being sent from the server (echo, error, status, reaction, etc.)
+
+
+# there could be a list of keywords defined to understand which type of message is being sent from the server 
+# (echo, error, status, response, etc.)
+testlist = ["echo", "erro", "stat", "resp"] # keeping them 4 letters for ease of use
+
+def handle_recv(client_socket, msg):
+  msgtype = msg[:4]
+  if msgtype in testlist:
+    print(f"Message type: {msgtype}")
+    if msgtype == "echo":
+      print(f"Echo: {msg[5:]}")
+
+    elif msgtype == "erro":
+      print(f"Error message from server: {msg[5:]}")
+
+    elif msgtype == "stat":
+      print(f"Status message: {msg[5:]}")
+
+    elif msgtype == "resp":
+      print(f"Response message: {msg[5:]}")
+
+
+  else:
+    print(f"Message type error")
+    return
+
 
 def listener(client_socket):
   print(f"Starting listener.")
   try:
     while True:
       response = client_socket.recv(1024).decode('utf-8')
-      print(f"Server sent: {response}")
+      print(f"Server sent: {response}") # staying for debugging purposes
+      handle_recv(client_socket, response)
   except Exception as e:
     print(f"Error with receiving a message: {e}")
   finally:
