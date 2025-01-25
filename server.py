@@ -109,7 +109,6 @@ def add(botname, client, botlist): # adds a new bot to the botlist and therefore
   if(botname in botlist):   #   if exists, return error
     response_message(client,"Bot already exists.")
     return
-  
   # around here need to add a system that checks for the github page or the file to find the actual bot.
   # and manage to run it without errors.
 
@@ -169,22 +168,37 @@ def start(botname, client, botlist, online_botlist):
   except Exception as e:
     response_message(client, f"Error starting bot {botname}: {e}")
   response_message(client, f"Started bot {botname}")
-def stop(botname, client):
+def stop(botname, client, botlist, online_botlist):
   response_message(client, f"Stopping bot {botname}")
   
   # check if bot exists
-  #   if not, return error
+  if (botname not in botlist):
+    #   if not, return error
+    response_message(client, f"Bot '{botname}' does not exist.")
+    return
   # check if bot is offline
-  #   if offline, return error
+  if(botname not in online_botlist):
+    #   if offline, return error
+    response_message(client, f"Bot '{botname}' is already offline.")
+    return
   # stop bot
-def update(botname, client):
+  online_botlist[online_botlist.index(botname)].terminate()
+  online_botlist[online_botlist.index(botname)].wait()
+  online_botlist.remove(botname) # could create errors
+  response_message(client, f"Stopped bot {botname}")
+def update(botname, client, botlist, online_botlist):
   response_message(client, f"Updating bot {botname}")
-  
   # check if bot exists
-  #   if not, return error
+  if(botname not in botlist):
+    #   if not, return error
+    response_message(client, f"Bot '{botname}' does not exist.")
+    return
   # check if bot is online
-  #   if online, stop bot
+  if(botname in online_botlist):
+    #   if online, stop bot
+    stop(botname, client, botlist, online_botlist)
   # update bot from github
+  # maybe add a variable to bot for this? idk
 def schedule_maintenance(botname, client):
   # used to set dates for maintenance
   # stops all bot activity, saves all data
@@ -272,9 +286,9 @@ def main():
 
 main()
 # TBD:
-#      1-) Adding, starting, stopping bots    ADD half done, START DONE, STOP not done
+#      1-) Adding, starting, stopping bots    DONE FOR NOW | ADD half done (db, git)(finished later.), START DONE, STOP DONE
 #      2-) Status update function             DONE 
-#      3-) Update bots
+#      3-) Update bots                        DONE FOR NOW | github issue
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      4-) Database setup, connection (SQLite (?))
 #      5-) Data check function
