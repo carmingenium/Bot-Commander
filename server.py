@@ -3,12 +3,13 @@ import time
 import socket
 import threading
 import subprocess
+import schedule # pip install schedule
 # DATABASE START # PLANNING TO SETUP DATABASE PART IN ANOTHER SCRIPT TO MODULARIZE TWO PARTS OF THE CODE, PLUS HOPING TO HAVE EASIER TIME TESTING
 import sqlite3
 from sqlite3 import Error
 # DATABASE END
 # UI #
-from colorama import Fore
+from colorama import Fore # pip install colorama
 
 
 # Variables
