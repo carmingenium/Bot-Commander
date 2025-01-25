@@ -289,6 +289,10 @@ main()
 #      1-) Adding, starting, stopping bots    DONE FOR NOW | ADD half done (db, git)(finished later.), START DONE, STOP DONE
 #      2-) Status update function             DONE 
 #      3-) Update bots                        DONE FOR NOW | github issue
+#      4-) Scheduling
+#      5-) Status formatting
+#      6-) Making functions usable by the clients
+#      7-) Testing
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      4-) Database setup, connection (SQLite (?))
 #      5-) Data check function
