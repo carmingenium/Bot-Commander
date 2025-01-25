@@ -22,7 +22,7 @@ global clientlist
 
 
 
-
+# function to run bots.
 def run_script_external(script_path):
   """Executes a Python script as a separate process."""
   try:
@@ -53,9 +53,6 @@ class Bot:
     self.location = location
   def update_status(self, status):
     self.status = status
-
-
-
 # Server needs to be accessible from anywhere, so we use '0.0.0.0' as the host to bind to all available interfaces.
 def start_server():
   # creating listener socket.
@@ -73,7 +70,6 @@ def start_server():
   botlist = ["AM.py"] # for tests, this place can be set empty or not.
   
   return server_socket, botlist
-
 # Function to accept clients - listener
 def accept_clients(server_socket):
   while True: # Keep the server running, listening for clients
@@ -82,7 +78,6 @@ def accept_clients(server_socket):
     client_socket, address = server_socket.accept()
     client_handler = threading.Thread(target=handle_client, args=(client_socket, address)) # new thread for every client
     client_handler.start()
-
 # Function to handle client connections
 def handle_client(client_socket, address):
   print(f"Connection established with {address}")
@@ -103,6 +98,7 @@ def handle_client(client_socket, address):
     print(f"Connection with {address} closed.")
     client_socket.close()
 
+# Basic Bot Actions
 def add(botname, client, botlist): # adds a new bot to the botlist and therefore botcommander.
   print(f"Adding bot {botname}")
   response_message(client, (f"Adding bot {botname}".encode('utf-8')))
@@ -127,7 +123,6 @@ def add(botname, client, botlist): # adds a new bot to the botlist and therefore
   print(f"Added bot {botname}")
   response_message(client ,f"Added bot {botname}".encode('utf-8'))
   return
-  
 def change(botname, newbotname, client):
   print(f"Changing bot {botname} to {newbotname}")
   response_message(client, f"Changing bot {botname} to {newbotname}".encode('utf-8'))
@@ -149,7 +144,6 @@ def change(botname, newbotname, client):
   # send this print to client also
   response_message(client,f"Changed bot {botname} to {newbotname}".encode('utf-8'))
   return
-
 def remove(botname, client):
   print(f"Removing bot {botname}")
   response_message(client, f"Removing bot {botname}".encode('utf-8'))
@@ -159,7 +153,6 @@ def remove(botname, client):
   # check if bot is online
   #   if online, return error
   # remove bot from database and refresh database variable
-  
 def start(botname, client, botlist):
   print(f"Starting bot {botname}")
   echo_message(client, f"Starting bot {botname}")
@@ -184,8 +177,6 @@ def start(botname, client, botlist):
       raise Exception(err)    
   except Exception as e:
     print(f"Error starting bot {botname}: {e}")
-  
-
 def stop(botname, client):
   print(f"Stopping bot {botname}")
   # send this print to client also
@@ -195,7 +186,6 @@ def stop(botname, client):
   # check if bot is offline
   #   if offline, return error
   # stop bot
-
 def update(botname, client):
   print(f"Updating bot {botname}")
   # send this print to client also
@@ -205,7 +195,12 @@ def update(botname, client):
   # check if bot is online
   #   if online, stop bot
   # update bot from github
-  
+def schedule_maintenance(botname, client):
+  # used to set dates for maintenance
+  # stops all bot activity, saves all data
+  # could have/become its own discord bot to log everything on a discord server.
+  return
+# Data functions
 def checkdata(botname, client):
   print(f"Checking data for bot {botname}")
   # send this print to client also
@@ -218,7 +213,6 @@ def checkdata(botname, client):
   # send client all the server names of the server data
   # give option to display data of a specific server
   # COULD LATER ADD CODE THAT SPESIFIES WHICH SERVERS DATA CAN BE REQUESTED FROM SPESIFIC CLIENTS FOR SECURITY.
-
 def show_status(clientlist, botlist):
   # show online / offline status 
 
