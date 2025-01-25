@@ -15,6 +15,7 @@ from colorama import Fore
 HOST = '0.0.0.0'  # Bind to all interfaces
 PORT = 12332
 global server_socket
+global online_botlist
 global botlist
 global dbconnection
 global clientlist
@@ -23,13 +24,15 @@ global clientlist
 
 
 # function to run bots.
-def run_script_external(script_path):
+def run_script_external(bot, online_botlist):
   """Executes a Python script as a separate process."""
   try:
-    subprocess.run(["python", script_path], check=True)
-    return "Script executed successfully."
+    online_botlist.append(subprocess.run(["python", bot.get_location], check=True))
+    # if successful
+    bot.update_status("online")
+    return "Script executed successfully.", online_botlist
   except subprocess.CalledProcessError as e:
-    return f"Error executing script: {e.stderr}"
+    return f"Error executing script: {e.stderr}", online_botlist
 
 
 # Bot class for testing
@@ -100,13 +103,11 @@ def handle_client(client_socket, address):
 
 # Basic Bot Actions
 def add(botname, client, botlist): # adds a new bot to the botlist and therefore botcommander.
-  print(f"Adding bot {botname}")
-  response_message(client, (f"Adding bot {botname}".encode('utf-8')))
+  response_message(client, (f"Adding bot {botname}"))
 
   # check if bot already exists
   if(botname in botlist):   #   if exists, return error
-    print("Bot already exists.")
-    response_message(client,"Bot already exists.".encode('utf-8'))
+    response_message(client,"Bot already exists.")
     return
   
   # around here need to add a system that checks for the github page or the file to find the actual bot.
@@ -118,21 +119,16 @@ def add(botname, client, botlist): # adds a new bot to the botlist and therefore
   botlist.append(botname)
   # add to database 
   # refresh database variable (sync with database)
-
-
-  print(f"Added bot {botname}")
-  response_message(client ,f"Added bot {botname}".encode('utf-8'))
+  response_message(client ,f"Added bot {botname}")
   return
 def change(botname, newbotname, client):
-  print(f"Changing bot {botname} to {newbotname}")
-  response_message(client, f"Changing bot {botname} to {newbotname}".encode('utf-8'))
+  response_message(client, f"Changing bot {botname} to {newbotname}")
 
   # check if bot exists
   if(botname not in botlist):
     # if not, return error   
-    print("Bot does not exist.")
     # send this print to client also
-    response_message(client,"Bot does not exist.".encode('utf-8'))
+    response_message(client,"Bot does not exist.")
     return
   # check if bot is online
   #   if online, return error
@@ -140,46 +136,41 @@ def change(botname, newbotname, client):
   # change bot name in database and refresh database variable
   # maybe new functions for database interactions?
 
-  print(f"Changed bot {botname} to {newbotname}")
   # send this print to client also
-  response_message(client,f"Changed bot {botname} to {newbotname}".encode('utf-8'))
+  response_message(client,f"Changed bot {botname} to {newbotname}")
   return
 def remove(botname, client):
-  print(f"Removing bot {botname}")
-  response_message(client, f"Removing bot {botname}".encode('utf-8'))
+  response_message(client, f"Removing bot {botname}")
   
   # check if bot exists
   #   if not, return error
   # check if bot is online
   #   if online, return error
   # remove bot from database and refresh database variable
-def start(botname, client, botlist):
-  print(f"Starting bot {botname}")
+def start(botname, client, botlist, online_botlist):
   echo_message(client, f"Starting bot {botname}")
   
   try:
     # check if bot exists
     if (botname not in botlist):
       #   if not, return error
-      print("Bot does not exist.")
-      response_message(client, "Bot does not exist.".encode('utf-8'))
+      response_message(client, "Bot does not exist.")
       return
     startingbot = botlist[botlist.index(botname)]
     # check if bot is online
     if (startingbot.get_status() == "online"):
       #   if online, return error
-      print("Bot is already online.")
-      response_message(client, "Bot is already online.".encode('utf-8'))
+      response_message(client, "Bot is already online.")
       return
     # start bot
-    err = run_script_external(startingbot.get_location())
+    err, online_botlist = run_script_external(startingbot, online_botlist)
     if (err != "Script executed successfully."):
       raise Exception(err)    
   except Exception as e:
-    print(f"Error starting bot {botname}: {e}")
+    response_message(client, f"Error starting bot {botname}: {e}")
+  response_message(client, f"Started bot {botname}")
 def stop(botname, client):
-  print(f"Stopping bot {botname}")
-  # send this print to client also
+  response_message(client, f"Stopping bot {botname}")
   
   # check if bot exists
   #   if not, return error
@@ -187,8 +178,7 @@ def stop(botname, client):
   #   if offline, return error
   # stop bot
 def update(botname, client):
-  print(f"Updating bot {botname}")
-  # send this print to client also
+  response_message(client, f"Updating bot {botname}")
   
   # check if bot exists
   #   if not, return error
@@ -202,8 +192,7 @@ def schedule_maintenance(botname, client):
   return
 # Data functions
 def checkdata(botname, client):
-  print(f"Checking data for bot {botname}")
-  # send this print to client also
+  response_message(client, f"Checking data of bot {botname}")
   
   # check if bot exists
   #   if not, return error
@@ -227,15 +216,18 @@ def show_status(clientlist, botlist):
   
 # Message type definition
 def echo_message(client, message):
+  print(f"Echoing message: {message}")
   client.send(f"echo{message}".encode('utf-8'))
   return
 def error_message(client, message):
+  print(f"Error: {message}")
   client.send(f"erro{message}".encode('utf-8'))
   return
 def status_message(client, message):
   client.send(f"stat{message}".encode('utf-8'))
   return
 def response_message(client, message):
+  print(f"Response: {message}")
   client.send(f"resp{message}".encode('utf-8'))
   return
 
