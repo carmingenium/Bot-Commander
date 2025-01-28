@@ -353,7 +353,8 @@ main()
 #      1-) Adding, starting, stopping bots    DONE FOR NOW | ADD half done (db, git)(finished later.), START DONE, STOP DONE
 #      2-) Status update function             DONE 
 #      3-) Update bots                        DONE FOR NOW | github issue
-#      4-) Scheduling
+#      4-) Scheduling                         DONE
+#      4.1 -) Refactoring
 #      5-) Status formatting
 #      6-) Making functions usable by the clients
 #      7-) Testing
