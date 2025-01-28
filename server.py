@@ -22,11 +22,12 @@ global online_botlist
 global botlist
 global dbconnection
 global clientlist
+global scheduler
 # Variables end
 
 
 
-# function to run bots.
+# irrelevant functions
 def run_script_external(bot, online_botlist):
   """Executes a Python script as a separate process."""
   try:
@@ -36,7 +37,23 @@ def run_script_external(bot, online_botlist):
     return "Script executed successfully.", online_botlist
   except subprocess.CalledProcessError as e:
     return f"Error executing script: {e.stderr}", online_botlist
-
+def convert_to_datetime(date_string):
+  """
+  Converts a string in the format '(YYYY, MM, DD, HH, MM)' to a datetime object.
+  """
+  try:
+    # Remove parentheses and split the string by commas
+    date_parts = date_string.strip("()").split(", ")
+    
+    # Convert each part to an integer
+    year, month, day, hour, minute = map(int, date_parts)
+    
+    # Create and return a datetime object
+    return datetime(year, month, day, hour, minute)
+  
+  except ValueError as e:
+    print(f"Invalid format: {e}")
+    return None
 
 # Bot class for testing
 class Bot:
@@ -104,6 +121,13 @@ def handle_client(client_socket, address):
     print(f"Connection with {address} closed.")
     client_socket.close()
 
+# UI
+def menu():
+  # main menu.
+  # comes up on startup with status update?
+  # need to find a place to put this
+  # this is necessary to show the user what the inputs should be for every function and what the functions are.
+  return
 # Basic Bot Actions
 def add(botname, client, botlist): # adds a new bot to the botlist and therefore botcommander.
   response_message(client, (f"Adding bot {botname}"))
@@ -184,6 +208,8 @@ def stop(botname, client, botlist, online_botlist):
     #   if offline, return error
     response_message(client, f"Bot '{botname}' is already offline.")
     return
+  # before stopping, do any saving or take needed precautions.
+  #empty
   # stop bot
   online_botlist[online_botlist.index(botname)].terminate()
   online_botlist[online_botlist.index(botname)].wait()
@@ -202,10 +228,40 @@ def update(botname, client, botlist, online_botlist):
     stop(botname, client, botlist, online_botlist)
   # update bot from github
   # maybe add a variable to bot for this? idk
-def schedule_maintenance(botname, client, time): # Set maintenance time (YYYY, MM, DD, HH, MM)
-  # used to set dates for maintenance
-  # stops all bot activity, saves all data
+def schedule_maintenance(botname, client, time, botlist): # Set maintenance time (YYYY, MM, DD, HH, MM) #bot name is also used on a switch
+  # used to set dates for maintainence
+  maintenance_time = convert_to_datetime(time)
+  if botname in botlist:
+    # If botname is in botlist, it is a bot
+    scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[client, [botname], online_botlist])
+  elif botname == "bot":
+    # Full bot maintenance
+    for bot in botlist:
+      scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[client, botlist, online_botlist])
+  elif botname == "commander":
+    # Self maintenance
+    scheduler.add_job(self_maintenance, 'date', run_date=maintenance_time, args=[client, [], online_botlist])
+  elif botname == "0":
+    # Full maintenance (first bots, then commander)
+    for bot in botlist:
+      scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[client, botlist, online_botlist])
+    scheduler.add_job(self_maintenance, 'date', run_date=maintenance_time + datetime.timedelta(minutes=1), args=[client, [], online_botlist])
+  else:
+    response_message(client, "Invalid botname for maintenance.")
+    return
+  print(f"Scheduling maintenance for bot {botname} at {time}")
+  client.send(f"Scheduling maintenance for bot {botname} at {time}".encode('utf-8'))
   # could have/become its own discord bot to log everything on a discord server.
+  return
+def bot_maintenance(botname, client, botlist, online_botlist):
+  # given bot activity
+  # data save should be in stop function
+  bot = botlist[botlist.index(botname)]
+  stop(bot, client, botlist, online_botlist)
+  return
+def self_maintenance(client, botlist, online_botlist):
+  # save all bot commander data
+  # stop bot commander
   return
 # Data functions
 def checkdata(botname, client):
@@ -263,9 +319,10 @@ def main():
   client_accepter = threading.Thread(target=accept_clients, args=(server_socket,))
   client_accepter.start()
 
-  # settig up maintenance thread
-  # maintenance = threading.Thread(target=schedule.run_pending())
-  # maintenance.start()
+  # setting up maintenance thread
+  scheduler = BackgroundScheduler()
+  scheduler.start()
+  # not fully decided on set interval maintenance, not sure if needed. skipping for now.
 
   # setup a current state for bots
   statelist = []
