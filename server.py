@@ -3,7 +3,9 @@ import time
 import socket
 import threading
 import subprocess
-import schedule # pip install schedule
+# Scheduling
+from apscheduler.schedulers.background import BackgroundScheduler # pip install apscheduler
+import datetime
 # DATABASE START # PLANNING TO SETUP DATABASE PART IN ANOTHER SCRIPT TO MODULARIZE TWO PARTS OF THE CODE, PLUS HOPING TO HAVE EASIER TIME TESTING
 import sqlite3
 from sqlite3 import Error
@@ -200,7 +202,7 @@ def update(botname, client, botlist, online_botlist):
     stop(botname, client, botlist, online_botlist)
   # update bot from github
   # maybe add a variable to bot for this? idk
-def schedule_maintenance(botname, client):
+def schedule_maintenance(botname, client, time): # Set maintenance time (YYYY, MM, DD, HH, MM)
   # used to set dates for maintenance
   # stops all bot activity, saves all data
   # could have/become its own discord bot to log everything on a discord server.
@@ -260,6 +262,10 @@ def main():
   # setting up listener thread separately from main thread.
   client_accepter = threading.Thread(target=accept_clients, args=(server_socket,))
   client_accepter.start()
+
+  # settig up maintenance thread
+  # maintenance = threading.Thread(target=schedule.run_pending())
+  # maintenance.start()
 
   # setup a current state for bots
   statelist = []
