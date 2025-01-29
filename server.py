@@ -28,22 +28,56 @@ from colorama import Fore # pip install colorama
 HOST = '0.0.0.0'  # Bind to all interfaces
 PORT = 12332
 server_socket = None
+"""
+Servers socket that clients connect to.
+"""
+botlist = None # holds Bot class objects.
+"""
+List of bots that the server manages.
 
-botlist = None
-online_botlist = None
+Contains only 'Bot' class objects.
+"""
+online_botlist = None # may only be needed for terminating bots.
+"""
+List of bots that are currently online.
+
+Contains subprocesses.
+"""
 clientlist = None
+"""
+List of clients that are currently connected to the server.
+
+Contains sockets.
+"""
 
 scheduler = None # maintenance scheduler
+"""
+Scheduler for maintenance tasks.
+
+Acts as a different thread (?)
+"""
 # Variables end
 
 
 
 # irrelevant functions
 def run_script_external(bot):
-  """Executes a Python script as a separate process."""
-  global online_botlist
+  """
+  Executes a Python script as a separate process.
+
+  Parameters
+  ----------
+  bot : Bot
+    The bot to execute
+  
+  Returns
+  -------
+  str
+    The output of the script execution (error or success message)
+  """
   try:
-    online_botlist.append(subprocess.run(["python", bot.get_location], check=True))
+    global online_botlist
+    online_botlist.append(subprocess.run(["python", bot.get_location()], check=True))
     # if successful
     bot.update_status("online")
     return "Script executed successfully."
@@ -66,13 +100,43 @@ def convert_to_datetime(date_string):
   except ValueError as e:
     print(f"Invalid format: {e}")
     return None
-
-# Bot class for testing
+def botfinder(botname):
+  for bot in botlist:
+    if bot.get_name() == botname:
+      return bot
+  return None
+# Bot class
 class Bot:
+  """
+  Class to represent discord bots.
+
+  Variables:
+  ----------
+  name : str
+    The name of the bot
+  status : str
+    The status of the bot (online or offline)
+  location : str
+    The location of the bot script
+  
+  Methods:
+  --------
+  get_name()
+  get_status()
+  get_location()
+
+  update_bot(name, location)
+  update_status(status)
+  """
   name = ""
   status = ""
   location = ""
-  def __init__(self, name, status, location):
+  # might add a github link var here.
+  # with the github link var, location could be created by the commander for any added bot.
+  def __init__(self, name, location = None, status = "offline"):
+    """
+    Constructor for the Bot class.
+    """
     self.name = name
     self.status = status
     self.location = location
@@ -83,13 +147,27 @@ class Bot:
   def get_location(self):
     return self.location
   def update_bot(self, name, location):
+    """
+    Updates the bot's name and location.
+
+    Sets the status offline automatically.
+
+    This method needs to be used carefully, bot shouldn't be online while updating.
+    """
     self.name = name
-    self.status = "offline"
+    self.status = "offline" #!
     self.location = location
   def update_status(self, status):
     self.status = status
+
+# Connection functions
 # Server needs to be accessible from anywhere, so we use '0.0.0.0' as the host to bind to all available interfaces.
 def start_server():
+  """
+  Starts the server and returns the server socket and botlist.
+
+  Updates botlist without the use of global
+  """
   # creating listener socket.
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   server_socket.bind((HOST, PORT))
@@ -103,18 +181,29 @@ def start_server():
   
   # for now, botlist is going to be manually set, because database implementation moved to last step.
   botlist = ["AM.py"] # for tests, this place can be set empty or not.
-  
   return server_socket, botlist
 # Function to accept clients - listener
 def accept_clients(server_socket):
+  """
+  Accepts clients and creates a new thread to handle each client.
+  """
+  global clientlist
   while True: # Keep the server running, listening for clients
     # create a new thread for every client, for automatic status update.
     # start show_status() and create the list of activebotlist -string list-.
     client_socket, address = server_socket.accept()
+
     client_handler = threading.Thread(target=handle_client, args=(client_socket, address)) # new thread for every client
     client_handler.start()
 # Function to handle client connections
 def handle_client(client_socket, address):
+  """
+  Listens the client constantly for input.
+
+  Puts the client into clientlist to keep track of active clients.
+  """
+  global clientlist
+  clientlist.append(client_socket)
   print(f"Connection established with {address}")
   try:
     while True:
@@ -123,7 +212,6 @@ def handle_client(client_socket, address):
       if not data:
         break
       print(f"Received from {address}: {data}")
-
       # Echo the message back
       response = f"Echo: {data}"
       echo_message(client_socket, response.encode('utf-8'))
@@ -131,6 +219,7 @@ def handle_client(client_socket, address):
     print(f"Error with client {address}: {e}")
   finally:
     print(f"Connection with {address} closed.")
+    clientlist.remove(client_socket)
     client_socket.close()
 
 # UI
@@ -141,98 +230,143 @@ def menu():
   # this is necessary to show the user what the inputs should be for every function and what the functions are.
   return
 # Basic Bot Actions
-def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
+def add(botname, client, location = None): # adds a new bot to the botlist and therefore botcommander.
+  """
+  Adds a bot to the botlist.
+
+  Github and database sync is not implemented yet.
+  """
   global botlist
   response_message(client, (f"Adding bot {botname}"))
 
   # check if bot already exists
-  if(botname in botlist):   #   if exists, return error
-    response_message(client,"Bot already exists.")
+  bot = botfinder(botname)
+  if(bot != None):
+    response_message(client, f"Bot {botname} already exists.")
     return
   # around here need to add a system that checks for the github page or the file to find the actual bot.
   # and manage to run it without errors.
 
   # else, add to database and refresh database variable
+  # this .py stuff is likely useless and irrelevant
   if (botname[-3:] != ".py"): # check if .py is in the name.
     botname = botname + ".py"
-  botlist.append(botname)
+  botlist.append(Bot(botname, location))
   # add to database 
   # refresh database variable (sync with database)
   response_message(client ,f"Added bot {botname}")
   return
 def remove(botname, client):
+  """
+  Removes a bot from the botlist.
+
+  Database sync not implemented yet.
+  """
   global botlist
   response_message(client, f"Removing bot {botname}")
   
   # check if bot exists
+  bot = botfinder(botname)
   #   if not, return error
+  if(bot == None):
+    response_message(client, f"Bot {botname} does not exist.")
+    return
   # check if bot is online
+  if(bot.get_status() == "online"):
   #   if online, return error
+    response_message(client, f"Bot {botname} is online. Stop the bot before removing.")
+    return
   # remove bot from database and refresh database variable
 def start(botname, client):
+  """
+  Starts a given bot.
+  """
   global online_botlist
   echo_message(client, f"Starting bot {botname}")
   
+  bot = botfinder(botname)
   try:
     # check if bot exists
-    if (botname not in botlist):
-      #   if not, return error
+    if (bot not in botlist):
+      # if not, return error
       response_message(client, "Bot does not exist.")
       return
-    startingbot = botlist[botlist.index(botname)]
     # check if bot is online
-    if (startingbot.get_status() == "online"):
-      #   if online, return error
+    if (bot.get_status() == "online"):
+      # if online, return error
       response_message(client, "Bot is already online.")
       return
     # start bot
-    err = run_script_external(startingbot)
+    err = run_script_external(bot)
     if (err != "Script executed successfully."):
       raise Exception(err)    
   except Exception as e:
     response_message(client, f"Error starting bot {botname}: {e}")
   response_message(client, f"Started bot {botname}")
 def stop(botname, client):
+  """
+  Stops a given bot.
+  """
   global online_botlist
   response_message(client, f"Stopping bot {botname}")
   
+  bot = botfinder(botname)
   # check if bot exists
-  if (botname not in botlist):
-    #   if not, return error
+  if (bot not in botlist):
+    # if not, return error
     response_message(client, f"Bot '{botname}' does not exist.")
     return
   # check if bot is offline
-  if(botname not in online_botlist):
-    #   if offline, return error
+  if(bot.get_status() == "offline"): # "bot not in online_botlist" removed due to error expectation 
+    # if offline, return error
     response_message(client, f"Bot '{botname}' is already offline.")
     return
   # before stopping, do any saving or take needed precautions.
   #empty
   # stop bot
+  # RESEARCH SUBPROCESSES, this should errors.
   online_botlist[online_botlist.index(botname)].terminate()
   online_botlist[online_botlist.index(botname)].wait()
-  online_botlist.remove(botname) # could create errors
+  online_botlist.remove(botname)
+  # NON-FUNCTIONAL CODE - FIX ASAP ^^^^
+
   response_message(client, f"Stopped bot {botname}")
 def update(botname, client):
+  """
+  Updates a given bot from GitHub.
+  """
   response_message(client, f"Updating bot {botname}")
+  bot = botfinder(botname)
   # check if bot exists
-  if(botname not in botlist):
-    #   if not, return error
+  if(bot == None):
+    # if not, return error
     response_message(client, f"Bot '{botname}' does not exist.")
     return
   # check if bot is online
-  if(botname in online_botlist):
-    #   if online, stop bot
+  if(bot.get_status()== "online"):
+    # if online, stop bot
     stop(botname, client)
   # update bot from github
-  # maybe add a variable to bot for this? idk
 def schedule_maintenance(botname, client, time): # Set maintenance time (YYYY, MM, DD, HH, MM) #bot name is also used on a switch
-  # used to set dates for maintainence
+  """
+  Used to set dates for maintainence
+
+  botname: str
+  ------------
+
+  if is a name of a bot, that bot will be scheduled for maintenance.
+
+  if "bot", all bots will be scheduled for maintenance.
+
+  if "commander", the server will be scheduled for maintenance.
+
+  if "0", all bots and the server will be scheduled for maintenance
+  """
   maintenance_time = convert_to_datetime(time)
-  if botname in botlist:
+  bot = botfinder(botname)
+  if bot in botlist:
     # If botname is in botlist, it is a bot
     # find bot
-    bot = botlist[botlist.index(botname)]
     scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[bot, client])
   elif botname == "bot":
     # Full bot maintenance
@@ -256,20 +390,25 @@ def schedule_maintenance(botname, client, time): # Set maintenance time (YYYY, M
 def bot_maintenance(bot, client):
   # given bot activity
   # data save should be in stop function
-  stop(bot, client)
+  stop(bot.get_name(), client)
   return
 def self_maintenance(client):
   # save all bot commander data
+  # inform client
+  client.send("Maintenance complete.".encode('utf-8'))
   # stop bot commander
   return
 # Data functions
 def checkdata(botname, client):
+  """
+  Display data of a selected bot.
+
+  Later on needs to be improved with security levels and data of different servers. Not implemented yet.
+  """
   response_message(client, f"Checking data of bot {botname}")
   # find bot
-  bot = None
-  try:
-    bot = botlist[botlist.index(botname)]
-  except ValueError:
+  bot = botfinder(botname)
+  if(bot == None):
     print(f'Bot {botname} does not exist.')
     response_message(client, f"Bot '{botname}' does not exist.")
     return
@@ -282,6 +421,11 @@ def checkdata(botname, client):
   # give option to display data of a specific server
   # COULD LATER ADD CODE THAT SPESIFIES WHICH SERVERS DATA CAN BE REQUESTED FROM SPESIFIC CLIENTS FOR SECURITY.
 def show_status():
+  """
+  Called on every bot status change.
+
+  Creates a formatted message, which is sent to all clients.
+  """
   # show online / offline status 
 
   # status will be changed on database by the bots,
@@ -331,7 +475,7 @@ def main():
   # setup a current state for bots
   statelist = []
   for bot in botlist:
-    statelist.append(Bot(bot, bot.status))
+    statelist.append(bot)
 
   # bot status checking and updating loop
   while True:
@@ -341,12 +485,13 @@ def main():
     # bot checking functionality (not defined, not used anywhere else)
     check = False
     for bot in botlist:
-      if bot.status != statelist[botlist.index(bot)].status: # might create error
+      if bot.get_status() != statelist[botlist.index(bot)].get_status():
         # update check
         check = True
         # update botlist
-        statelist[botlist.index(bot)].status = bot.status
+        statelist[botlist.index(bot)].update_status(bot.get_status())
         # update bot status for every client.
+        print(f"Not implemented feature: Bot status changed to {bot.get_status()}")
         pass
     if (check):
       show_status(clientlist, botlist)
@@ -358,10 +503,12 @@ main()
 #      2-) Status update function             DONE 
 #      3-) Update bots                        DONE FOR NOW | github issue
 #      4-) Scheduling                         DONE
-#      4.1 -) Refactoring
+#      4.1 -) Refactoring                     DONE
 #      5-) Status formatting
 #      6-) Making functions usable by the clients
 #      7-) Testing
+#      7.1-) Github Connection
+#      7.2-) .env injection (token)
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      8-) Database setup, connection (SQLite (?)) (maybe pandas?)
 #      9-) Data check function
