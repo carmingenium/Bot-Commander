@@ -13,6 +13,11 @@ from sqlite3 import Error
 # UI #
 from colorama import Fore # pip install colorama
 
+# Security Notes #
+#
+# 1-) Exclusivity, Data Integrity
+#   Multiple layers of connection, not every client should reach every data. And client should mostly be readonly (tbd)
+
 
 # Variables
 HOST = '0.0.0.0'  # Bind to all interfaces
@@ -359,5 +364,5 @@ main()
 #      6-) Making functions usable by the clients
 #      7-) Testing
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
-#      4-) Database setup, connection (SQLite (?))
+#      4-) Database setup, connection (SQLite (?)) (maybe pandas?)
 #      5-) Data check function
