@@ -18,6 +18,11 @@ from colorama import Fore # pip install colorama
 # 1-) Exclusivity, Data Integrity
 #   Multiple layers of connection, not every client should reach every data. And client should mostly be readonly (tbd)
 
+# User System
+# After version 1.0 has been finished, a new user system could be implemented.
+# This system would need the global connection system to be done.
+# Users of these bots could send applications for different levels of usership.
+# Later on they can view or change data of the bots they have access to according to the usership.
 
 # Variables
 HOST = '0.0.0.0'  # Bind to all interfaces
