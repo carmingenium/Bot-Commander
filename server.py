@@ -27,26 +27,28 @@ from colorama import Fore # pip install colorama
 # Variables
 HOST = '0.0.0.0'  # Bind to all interfaces
 PORT = 12332
-global server_socket
-global online_botlist
-global botlist
-global dbconnection
-global clientlist
-global scheduler
+server_socket = None
+
+botlist = None
+online_botlist = None
+clientlist = None
+
+scheduler = None # maintenance scheduler
 # Variables end
 
 
 
 # irrelevant functions
-def run_script_external(bot, online_botlist):
+def run_script_external(bot):
   """Executes a Python script as a separate process."""
+  global online_botlist
   try:
     online_botlist.append(subprocess.run(["python", bot.get_location], check=True))
     # if successful
     bot.update_status("online")
-    return "Script executed successfully.", online_botlist
+    return "Script executed successfully."
   except subprocess.CalledProcessError as e:
-    return f"Error executing script: {e.stderr}", online_botlist
+    return f"Error executing script: {e.stderr}"
 def convert_to_datetime(date_string):
   """
   Converts a string in the format '(YYYY, MM, DD, HH, MM)' to a datetime object.
@@ -139,7 +141,8 @@ def menu():
   # this is necessary to show the user what the inputs should be for every function and what the functions are.
   return
 # Basic Bot Actions
-def add(botname, client, botlist): # adds a new bot to the botlist and therefore botcommander.
+def add(botname, client): # adds a new bot to the botlist and therefore botcommander.
+  global botlist
   response_message(client, (f"Adding bot {botname}"))
 
   # check if bot already exists
@@ -157,25 +160,8 @@ def add(botname, client, botlist): # adds a new bot to the botlist and therefore
   # refresh database variable (sync with database)
   response_message(client ,f"Added bot {botname}")
   return
-def change(botname, newbotname, client):
-  response_message(client, f"Changing bot {botname} to {newbotname}")
-
-  # check if bot exists
-  if(botname not in botlist):
-    # if not, return error   
-    # send this print to client also
-    response_message(client,"Bot does not exist.")
-    return
-  # check if bot is online
-  #   if online, return error
-
-  # change bot name in database and refresh database variable
-  # maybe new functions for database interactions?
-
-  # send this print to client also
-  response_message(client,f"Changed bot {botname} to {newbotname}")
-  return
 def remove(botname, client):
+  global botlist
   response_message(client, f"Removing bot {botname}")
   
   # check if bot exists
@@ -183,7 +169,8 @@ def remove(botname, client):
   # check if bot is online
   #   if online, return error
   # remove bot from database and refresh database variable
-def start(botname, client, botlist, online_botlist):
+def start(botname, client):
+  global online_botlist
   echo_message(client, f"Starting bot {botname}")
   
   try:
@@ -199,13 +186,14 @@ def start(botname, client, botlist, online_botlist):
       response_message(client, "Bot is already online.")
       return
     # start bot
-    err, online_botlist = run_script_external(startingbot, online_botlist)
+    err = run_script_external(startingbot)
     if (err != "Script executed successfully."):
       raise Exception(err)    
   except Exception as e:
     response_message(client, f"Error starting bot {botname}: {e}")
   response_message(client, f"Started bot {botname}")
-def stop(botname, client, botlist, online_botlist):
+def stop(botname, client):
+  global online_botlist
   response_message(client, f"Stopping bot {botname}")
   
   # check if bot exists
@@ -225,7 +213,7 @@ def stop(botname, client, botlist, online_botlist):
   online_botlist[online_botlist.index(botname)].wait()
   online_botlist.remove(botname) # could create errors
   response_message(client, f"Stopped bot {botname}")
-def update(botname, client, botlist, online_botlist):
+def update(botname, client):
   response_message(client, f"Updating bot {botname}")
   # check if bot exists
   if(botname not in botlist):
@@ -235,27 +223,29 @@ def update(botname, client, botlist, online_botlist):
   # check if bot is online
   if(botname in online_botlist):
     #   if online, stop bot
-    stop(botname, client, botlist, online_botlist)
+    stop(botname, client)
   # update bot from github
   # maybe add a variable to bot for this? idk
-def schedule_maintenance(botname, client, time, botlist): # Set maintenance time (YYYY, MM, DD, HH, MM) #bot name is also used on a switch
+def schedule_maintenance(botname, client, time): # Set maintenance time (YYYY, MM, DD, HH, MM) #bot name is also used on a switch
   # used to set dates for maintainence
   maintenance_time = convert_to_datetime(time)
   if botname in botlist:
     # If botname is in botlist, it is a bot
-    scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[client, [botname], online_botlist])
+    # find bot
+    bot = botlist[botlist.index(botname)]
+    scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[bot, client])
   elif botname == "bot":
     # Full bot maintenance
     for bot in botlist:
-      scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[client, botlist, online_botlist])
+      scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[bot, client])
   elif botname == "commander":
     # Self maintenance
-    scheduler.add_job(self_maintenance, 'date', run_date=maintenance_time, args=[client, [], online_botlist])
+    scheduler.add_job(self_maintenance, 'date', run_date=maintenance_time, args=[client])
   elif botname == "0":
     # Full maintenance (first bots, then commander)
     for bot in botlist:
-      scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[client, botlist, online_botlist])
-    scheduler.add_job(self_maintenance, 'date', run_date=maintenance_time + datetime.timedelta(minutes=1), args=[client, [], online_botlist])
+      scheduler.add_job(bot_maintenance, 'date', run_date=maintenance_time, args=[bot, client])
+    scheduler.add_job(self_maintenance, 'date', run_date=maintenance_time + datetime.timedelta(minutes=1), args=[client])
   else:
     response_message(client, "Invalid botname for maintenance.")
     return
@@ -263,20 +253,26 @@ def schedule_maintenance(botname, client, time, botlist): # Set maintenance time
   client.send(f"Scheduling maintenance for bot {botname} at {time}".encode('utf-8'))
   # could have/become its own discord bot to log everything on a discord server.
   return
-def bot_maintenance(botname, client, botlist, online_botlist):
+def bot_maintenance(bot, client):
   # given bot activity
   # data save should be in stop function
-  bot = botlist[botlist.index(botname)]
-  stop(bot, client, botlist, online_botlist)
+  stop(bot, client)
   return
-def self_maintenance(client, botlist, online_botlist):
+def self_maintenance(client):
   # save all bot commander data
   # stop bot commander
   return
 # Data functions
 def checkdata(botname, client):
   response_message(client, f"Checking data of bot {botname}")
-  
+  # find bot
+  bot = None
+  try:
+    bot = botlist[botlist.index(botname)]
+  except ValueError:
+    print(f'Bot {botname} does not exist.')
+    response_message(client, f"Bot '{botname}' does not exist.")
+    return
   # check if bot exists
   #   if not, return error
   # check if bot is online
@@ -285,7 +281,7 @@ def checkdata(botname, client):
   # send client all the server names of the server data
   # give option to display data of a specific server
   # COULD LATER ADD CODE THAT SPESIFIES WHICH SERVERS DATA CAN BE REQUESTED FROM SPESIFIC CLIENTS FOR SECURITY.
-def show_status(clientlist, botlist):
+def show_status():
   # show online / offline status 
 
   # status will be changed on database by the bots,
@@ -313,8 +309,6 @@ def response_message(client, message):
   print(f"Response: {message}")
   client.send(f"resp{message}".encode('utf-8'))
   return
-
-
 
 
 
@@ -369,5 +363,5 @@ main()
 #      6-) Making functions usable by the clients
 #      7-) Testing
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
-#      4-) Database setup, connection (SQLite (?)) (maybe pandas?)
-#      5-) Data check function
+#      8-) Database setup, connection (SQLite (?)) (maybe pandas?)
+#      9-) Data check function
