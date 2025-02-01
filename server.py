@@ -427,15 +427,15 @@ def show_status():
   Creates a formatted message, which is sent to all clients.
   """
   # show online / offline status 
-
-  # status will be changed on database by the bots,
+  # Also show basic data for every bot that is held on the database of server.
   # on status change this function needs to rerun to update the status.
+
   status = ""
-  for bot in botlist:
-    status += f"{bot.name}: {bot.status}\n" # need to colorize and make pretty later on
-  for client in clientlist:
-    status_message(client, status) 
-  return 
+  for bot in botlist: # I need this sequence to be quick, like all bots coming at the same time. could be refactored for this.
+    status = bot.get_status()
+    for client in clientlist:
+      status_message(client, status, bot) 
+    return 
   
 # Message type definition
 def echo_message(client, message):
@@ -446,8 +446,16 @@ def error_message(client, message):
   print(f"Error: {message}")
   client.send(f"erro{message}".encode('utf-8'))
   return
-def status_message(client, message):
-  client.send(f"stat{message}".encode('utf-8'))
+def status_message(client, status, bot):
+  if (status == "online"):
+    status = Fore.GREEN + status + Fore.RESET
+  else:
+    status = Fore.RED + status + Fore.RESET
+  client.send
+  (f"Current status of '{bot.get_name()}': {status}\n 
+  Later on, how many servers are connected will be projected.\n 
+  If there are any problems with speed or data storage, database information could be added.
+  ".encode('utf-8'))
   return
 def response_message(client, message):
   print(f"Response: {message}")
@@ -499,12 +507,12 @@ def main():
 
 main()
 # TBD:
-#      1-) Adding, starting, stopping bots    DONE FOR NOW | ADD half done (db, git)(finished later.), START DONE, STOP DONE
-#      2-) Status update function             DONE 
-#      3-) Update bots                        DONE FOR NOW | github issue
-#      4-) Scheduling                         DONE
-#      4.1 -) Refactoring                     DONE
-#      5-) Status formatting
+#      1-) Adding, starting, stopping bots          DONE
+#      2-) Status update function                   DONE 
+#      3-) Update bots                              DONE
+#      4-) Scheduling                               DONE
+#      4.1 -) Refactoring                           DONE
+#      5-) Status formatting                        DONE
 #      6-) Making functions usable by the clients
 #      7-) Testing
 #      7.1-) Github Connection
