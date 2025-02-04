@@ -12,6 +12,7 @@ from sqlite3 import Error
 # DATABASE END
 # UI #
 from colorama import Fore # pip install colorama
+import re                 # client message parsing
 
 # Security Notes #
 #
@@ -49,13 +50,14 @@ List of clients that are currently connected to the server.
 
 Contains sockets.
 """
-
 scheduler = None # maintenance scheduler
 """
 Scheduler for maintenance tasks.
 
 Acts as a different thread (?)
 """
+# possible functions that client can call.
+ALLOWED_FUNCTIONS = ["add", "remove", "start", "stop", "update", "schedule", "checkdata"]
 # Variables end
 
 
@@ -105,6 +107,54 @@ def botfinder(botname):
     if bot.get_name() == botname:
       return bot
   return None
+
+
+
+
+
+# Sample input messages
+messages = [
+    "add(1, 2, 3)",
+    "remove('apple', 'banana')",
+    "update(42, 'hello', 3.14)",
+    "invalid_func(5, 6)"  # This should be ignored
+]
+
+def parse_message(message):
+  """
+  Parses a client message in the format 'func(a, b, c)'.
+  Extracts the function name and arguments.
+  """
+  pattern = r"^(\w+)\((.*?)\)$"  # Matches 'func(args)'
+  match = re.match(pattern, message.strip())
+
+  if not match:
+    return None, None  # Invalid format
+
+  func_name, args_str = match.groups()
+
+  if func_name not in ALLOWED_FUNCTIONS:
+    return None, None  # Function not allowed
+
+  # Convert the arguments string into actual Python objects
+  try:
+    args = eval(f"({args_str})")  # Unsafe in some cases, but okay for controlled inputs
+    if not isinstance(args, tuple):  # Ensure args is always a tuple
+      args = (args,)
+  except Exception as e:
+    print(f"Error parsing arguments: {e}")
+    return None, None
+  return func_name, args
+
+# Example usage
+for msg in messages:
+    func_name, args = parse_message(msg)
+    if func_name:
+        print(f"Function: {func_name}, Arguments: {args}")
+    else:
+        print(f"Invalid or unauthorized message: {msg}")
+
+
 # Bot class
 class Bot:
   """
@@ -221,7 +271,15 @@ def handle_client(client_socket, address):
     print(f"Connection with {address} closed.")
     clientlist.remove(client_socket)
     client_socket.close()
-
+# Function to handle received messages
+def handle_clientactions(client, message):
+  """
+  Receives commands from clients and executes the corresponding functions.
+  There are different type of functions, some of them possible require multiple messages.
+  There will be a mechanism to work it out.
+  """
+  message = message.split(" ")
+  return
 # UI
 def menu():
   # main menu.
