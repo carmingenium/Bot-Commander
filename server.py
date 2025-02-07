@@ -14,7 +14,7 @@ from sqlite3 import Error
 from colorama import Fore # pip install colorama
 import re                 # client message parsing
 
-# Security Notes #
+# Security Notes ##
 #
 # 1-) Exclusivity, Data Integrity
 #   Multiple layers of connection, not every client should reach every data. And client should mostly be readonly (tbd)
