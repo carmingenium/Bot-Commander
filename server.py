@@ -120,7 +120,7 @@ messages = [
     "invalid_func(5, 6)"  # This should be ignored
 ]
 
-def parse_message(message):
+def parse_message(message): # looks good for now
   """
   Parses a client message in the format 'func(a, b, c)'.
   Extracts the function name and arguments.
@@ -147,12 +147,12 @@ def parse_message(message):
   return func_name, args
 
 # Example usage
-for msg in messages:
-    func_name, args = parse_message(msg)
-    if func_name:
-        print(f"Function: {func_name}, Arguments: {args}")
-    else:
-        print(f"Invalid or unauthorized message: {msg}")
+# for msg in messages:
+#     func_name, args = parse_message(msg)
+#     if func_name:
+#         print(f"Function: {func_name}, Arguments: {args}")
+#     else:
+#         print(f"Invalid or unauthorized message: {msg}")
 
 
 # Bot class
@@ -262,24 +262,59 @@ def handle_client(client_socket, address):
       if not data:
         break
       print(f"Received from {address}: {data}")
-      # Echo the message back
+      # Echo the message back ! propably will be removed !
       response = f"Echo: {data}"
       echo_message(client_socket, response.encode('utf-8'))
+      # Handle the message
+      handle_clientactions(client_socket, data)
   except Exception as e:
     print(f"Error with client {address}: {e}")
   finally:
     print(f"Connection with {address} closed.")
     clientlist.remove(client_socket)
     client_socket.close()
+
 # Function to handle received messages
 def handle_clientactions(client, message):
   """
-  Receives commands from clients and executes the corresponding functions.
-  There are different type of functions, some of them possible require multiple messages.
-  There will be a mechanism to work it out.
+  Handles client commands by executing the corresponding functions.
+
+  Args:
+      client (socket): The client socket.
+      message (str): The message received from the client in format 'func(arg1, arg2)'.
   """
-  message = message.split(" ")
-  return
+  # Parse the message
+  func_name, args = parse_message(message)
+
+  if not func_name:
+    error_message(client, "Invalid command or unauthorized function.")
+    return
+  
+  # Function mapping
+  function_map = {
+    "add": add,
+    "remove": remove,
+    "start": start,
+    "stop": stop,
+    "update": update,
+    "schedule": schedule_maintenance,
+    "checkdata": checkdata
+  }
+
+  # Call the function dynamically if it exists
+  if func_name in function_map:
+    try:
+      function_map[func_name](*args, client)  # Pass client socket as the last argument
+    except TypeError as e:
+      error_message(client, f"Incorrect arguments: {e}")
+    except Exception as e:
+      error_message(client, f"Error executing {func_name}: {e}")
+  else:
+    error_message(client, f"Function '{func_name}' not found.")
+
+
+
+
 # UI
 def menu():
   # main menu.
@@ -571,7 +606,7 @@ main()
 #      4-) Scheduling                               DONE
 #      4.1 -) Refactoring                           DONE
 #      5-) Status formatting                        DONE
-#      6-) Making functions usable by the clients
+#      6-) Making functions usable by the clients   DONE
 #      7-) Testing
 #      7.1-) Github Connection
 #      7.2-) .env injection (token)
