@@ -62,7 +62,7 @@ ALLOWED_FUNCTIONS = ["add", "remove", "start", "stop", "update", "schedule", "ch
 
 
 
-# irrelevant functions
+# Utility
 def run_script_external(bot):
   """
   Executes a Python script as a separate process.
@@ -107,19 +107,6 @@ def botfinder(botname):
     if bot.get_name() == botname:
       return bot
   return None
-
-
-
-
-
-# Sample input messages
-messages = [
-    "add(1, 2, 3)",
-    "remove('apple', 'banana')",
-    "update(42, 'hello', 3.14)",
-    "invalid_func(5, 6)"  # This should be ignored
-]
-
 def parse_message(message): # looks good for now
   """
   Parses a client message in the format 'func(a, b, c)'.
@@ -145,14 +132,6 @@ def parse_message(message): # looks good for now
     print(f"Error parsing arguments: {e}")
     return None, None
   return func_name, args
-
-# Example usage
-# for msg in messages:
-#     func_name, args = parse_message(msg)
-#     if func_name:
-#         print(f"Function: {func_name}, Arguments: {args}")
-#     else:
-#         print(f"Invalid or unauthorized message: {msg}")
 
 
 # Bot class
@@ -226,11 +205,16 @@ def start_server():
   print(f"Server started on port {PORT}. Waiting for connections...")
   # listener done.
   
+  # global variables initializing.
+  global clientlist, online_botlist
+  clientlist = []
+  online_botlist = []
+  
   # connecting to database
-  # load botlist -string list- from database.
+  # load botlist -string list- from database. !! this is changed but need a format to turn bots into string data
   
   # for now, botlist is going to be manually set, because database implementation moved to last step.
-  botlist = ["AM.py"] # for tests, this place can be set empty or not.
+  botlist = [] # cant put strings and bot objects need subprocesses, empty for now.
   return server_socket, botlist
 # Function to accept clients - listener
 def accept_clients(server_socket):
@@ -252,7 +236,7 @@ def handle_client(client_socket, address):
 
   Puts the client into clientlist to keep track of active clients.
   """
-  global clientlist
+  global clientlist #clientlist not initialized.
   clientlist.append(client_socket)
   print(f"Connection established with {address}")
   try:
@@ -273,7 +257,6 @@ def handle_client(client_socket, address):
     print(f"Connection with {address} closed.")
     clientlist.remove(client_socket)
     client_socket.close()
-
 # Function to handle received messages
 def handle_clientactions(client, message):
   """
@@ -311,7 +294,6 @@ def handle_clientactions(client, message):
       error_message(client, f"Error executing {func_name}: {e}")
   else:
     error_message(client, f"Function '{func_name}' not found.")
-
 
 
 
@@ -532,7 +514,7 @@ def show_status():
   
 # Message type definition
 def echo_message(client, message):
-  print(f"Echoing message: {message}")
+  print(f"Echoing message: {message}") 
   client.send(f"echo{message}".encode('utf-8'))
   return
 def error_message(client, message):
@@ -545,10 +527,7 @@ def status_message(client, status, bot):
   else:
     status = Fore.RED + status + Fore.RESET
   client.send
-  (f"Current status of '{bot.get_name()}': {status}\n 
-  Later on, how many servers are connected will be projected.\n 
-  If there are any problems with speed or data storage, database information could be added.
-  ".encode('utf-8'))
+  (f"Current status of '{bot.get_name()}': {status}\n Later on, how many servers are connected will be projected.\n If there are any problems with speed or data storage, database information could be added.".encode('utf-8'))
   return
 def response_message(client, message):
   print(f"Response: {message}")
@@ -605,7 +584,7 @@ main()
 #      3-) Update bots                              DONE
 #      4-) Scheduling                               DONE
 #      4.1 -) Refactoring                           DONE
-#      5-) Status formatting                        DONE
+#      5-) Status formatting                        DONE - ???? why is this skipped
 #      6-) Making functions usable by the clients   DONE
 #      7-) Testing
 #      7.1-) Github Connection

@@ -16,19 +16,19 @@ testlist = ["echo", "erro", "stat", "resp"] # keeping them 4 letters for ease of
 def handle_recv(client_socket, msg): # maybe this parts actually useless and all the categorization and formatting can be done on server ????????????
   msgtype = msg[:4]
   if msgtype in testlist:
-    print(f"Message type: {msgtype}")
+    print(f"Server sent a message, Message type: {msgtype}")
     if msgtype == "echo":
-      print(f"Echo: {msg[4:]}")
+      print(f"{msg[6:-1]}")
 
     elif msgtype == "erro":
-      print(f"Error message from server: {msg[4:]}")
+      print(f"Error message from server: {msg[6:-1]}")
 
     elif msgtype == "stat":
       # this part needs to be formatted, after status update function is done on server side.
-      print(f"Status update: {msg[4:]}")
+      print(f"Status update: {msg[6:-1]}")
 
     elif msgtype == "resp":
-      print(f"Response message: {msg[4:]}")
+      print(f"Response message: {msg[6:-1]}")
 
 
   else:
@@ -41,7 +41,8 @@ def listener(client_socket):
   try:
     while True:
       response = client_socket.recv(1024).decode('utf-8')
-      print(f"Server sent: {response}") # staying for debugging purposes
+      print()
+      # print(f"\n Server sent: {response} \n") # confusing debugging process
       handle_recv(client_socket, response)
   except Exception as e:
     print(f"Error with receiving a message: {e}")
