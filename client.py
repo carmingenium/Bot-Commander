@@ -1,34 +1,58 @@
 import socket
 import threading
+import time
 # UI #
-from colorama import Fore
+from colorama import Fore, Style, init
+
+init(autoreset=True)  # Initialize Colorama to fix Windows CMD issues
+
 
 # UI PART #
 # When no other function is active, only result of this function should be shown on the screen (just status for every bot)
 # when any other function is active, program should be a black screen with only results from active function and input of the client.
 # this UI should be on the client.
+# UI Function #
+def highlight_last_part(text, color):
+  if ':' not in text:
+    return text  # If no ":", return original
+  before, _, last_part = text.rpartition(':')  # Split at the last ":"  
+  colored_last_part = color + last_part.strip() + Style.RESET_ALL  # Apply color
+  return f"{before}: {colored_last_part}"  # Reconstruct the full string
 
 
 # there could be a list of keywords defined to understand which type of message is being sent from the server 
 # (echo, error, status, response, etc.)
 testlist = ["echo", "erro", "stat", "resp"] # keeping them 4 letters for ease of use
 
-def handle_recv(client_socket, msg): # maybe this parts actually useless and all the categorization and formatting can be done on server ????????????
+
+
+
+
+def handle_recv(client_socket, msg): 
   msgtype = msg[:4]
   if msgtype in testlist:
-    print(f"Server sent a message, Message type: {msgtype}")
+    print(f"{msgtype}  ", end="")
     if msgtype == "echo":
-      print(f"{msg[6:-1]}")
+      msg = msg[6:-1]
+      echo = Fore.CYAN + msg + Fore.RESET
+      print(f"{echo}")
 
     elif msgtype == "erro":
-      print(f"Error message from server: {msg[6:-1]}")
+      error = Fore.RED + "Error message from server: " + Fore.RESET
+      print(f"{error}{msg[6:-1]}")
 
     elif msgtype == "stat":
-      # this part needs to be formatted, after status update function is done on server side.
-      print(f"Status update: {msg[6:-1]}")
-
+      message = msg[msg.rfind(":")+2]
+      if (message == "ONLINE"):
+        message = highlight_last_part(msg, Fore.GREEN)
+      else:
+        message = highlight_last_part(msg, Fore.GREEN)
+      print(f"Status update: {message[6:-1]}")
+      
     elif msgtype == "resp":
-      print(f"Response message: {msg[6:-1]}")
+      msg = msg[6:-1]
+      msg = Fore.WHITE + msg + Fore.RESET 
+      print(f"Response message: {msg}")
 
 
   else:
@@ -42,7 +66,6 @@ def listener(client_socket):
     while True:
       response = client_socket.recv(1024).decode('utf-8')
       print()
-      # print(f"\n Server sent: {response} \n") # confusing debugging process
       handle_recv(client_socket, response)
   except Exception as e:
     print(f"Error with receiving a message: {e}")
@@ -51,14 +74,16 @@ def listener(client_socket):
     client_socket.close()
 
 def send_message(client_socket):
+  time.sleep(0.1)
   print(f"Starting message sending thread.")
   try:
     while True:
-      message = input("Enter message to send (type 'exit' to quit): ")
+      message = input("\nEnter message to send (type 'exit' to quit): ")
       if message.lower() == 'exit':
         client_socket.close()
       client_socket.send(message.encode('utf-8'))
       print(f"Message sent: {message}")
+      time.sleep(1.5)
   except Exception as e:
     print(f"Error with sending a message: {e}")
   finally:
@@ -77,6 +102,8 @@ def start_client(server_ip):
     response_handler = threading.Thread(target=send_message, args=(client_socket,))
     response_handler.start()
     listener(client_socket)
+
+    
 
   except Exception as e:
     print(f"Error connecting to server: {e}")

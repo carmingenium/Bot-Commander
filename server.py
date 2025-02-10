@@ -11,7 +11,9 @@ import sqlite3
 from sqlite3 import Error
 # DATABASE END
 # UI #
-from colorama import Fore # pip install colorama
+from colorama import Fore, Style, init # pip install colorama
+
+init(autoreset=True)  # Initialize Colorama to fix Windows CMD issues
 import re                 # client message parsing
 
 # Security Notes ##
@@ -522,12 +524,12 @@ def error_message(client, message):
   client.send(f"erro{message}".encode('utf-8'))
   return
 def status_message(client, status, bot):
-  if (status == "online"):
-    status = Fore.GREEN + status + Fore.RESET
+  if (status == "online"): # coloring before sending doesnt seem to work.
+    status = Fore.GREEN + status + Fore.RESET 
   else:
     status = Fore.RED + status + Fore.RESET
-  client.send
-  (f"Current status of '{bot.get_name()}': {status}\n Later on, how many servers are connected will be projected.\n If there are any problems with speed or data storage, database information could be added.".encode('utf-8'))
+  # client.send(f"Current status of '{bot.get_name()}': {status}\n Later on, how many servers are connected will be projected.\n If there are any problems with speed or data storage, database information could be added.".encode('utf-8'))
+  client.send(f"stat{bot.get_name()} : {status.upper()}".encode('utf-8'))
   return
 def response_message(client, message):
   print(f"Response: {message}")
@@ -584,11 +586,12 @@ main()
 #      3-) Update bots                              DONE
 #      4-) Scheduling                               DONE
 #      4.1 -) Refactoring                           DONE
-#      5-) Status formatting                        DONE - ???? why is this skipped
-#      6-) Making functions usable by the clients   DONE
-#      7-) Testing
-#      7.1-) Github Connection
-#      7.2-) .env injection (token)
+#      5-) Status formatting                        DONE
+#      6-) Making functions usable by the clients   DONE - Needs bots to be able to run. 
+#      7-) Testing                                  DONE
+#      7.1-) Github Connection                      D
+#      7.2-) .env injection (token)                 D
+#      7.3-) Testing Github                         D
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      8-) Database setup, connection (SQLite (?)) (maybe pandas?)
 #      9-) Data check function
