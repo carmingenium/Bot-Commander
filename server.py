@@ -3,18 +3,20 @@ import time
 import socket
 import threading
 import subprocess
+import os
 # Scheduling
 from apscheduler.schedulers.background import BackgroundScheduler # pip install apscheduler
 import datetime
 # DATABASE START # PLANNING TO SETUP DATABASE PART IN ANOTHER SCRIPT TO MODULARIZE TWO PARTS OF THE CODE, PLUS HOPING TO HAVE EASIER TIME TESTING
 import sqlite3
 from sqlite3 import Error
-# DATABASE END
+# GITHUB
+import git # pip install gitpython
 # UI #
 from colorama import Fore, Style, init # pip install colorama
 
 init(autoreset=True)  # Initialize Colorama to fix Windows CMD issues
-import re                 # client message parsing
+import re             # client message parsing
 
 # Security Notes ##
 #
@@ -134,6 +136,35 @@ def parse_message(message): # looks good for now
     print(f"Error parsing arguments: {e}")
     return None, None
   return func_name, args
+def clone_repo(repo_url, destination_folder):
+  """
+  Clones a GitHub repository into a specified folder.
+  """
+  # Example usage
+  # repo_url = "https://github.com/user/repository.git"
+  # destination_folder = "/path/to/folder"  # Change this to your desired path
+  # clone_repo(repo_url, destination_folder)
+  git.Repo.clone_from(repo_url, destination_folder)
+  print(f"Repository cloned into {destination_folder}")
+  return (destination_folder,f"Repository cloned into {destination_folder}") # send this with a response message to the client
+def create_env_file(directory, token):
+  """
+  Creates a .env file in the specified directory with the given token, for the bots to use.
+  """
+  # Ensure the directory exists
+  try:
+    os.makedirs(directory, exist_ok=True) # test this !
+  except OSError as e:
+    msg = f"Directory does not exist: {e}"
+    return
+  # Define the file path
+  env_file_path = os.path.join(directory, ".env")
+  
+  # Write the token to the file
+  with open(env_file_path, "w") as env_file:
+    env_file.write(f"{token}\n")
+  msg = ".env file created at {env_file_path}"
+  return msg
 
 
 # Bot class
@@ -307,7 +338,7 @@ def menu():
   # this is necessary to show the user what the inputs should be for every function and what the functions are.
   return
 # Basic Bot Actions
-def add(botname, client, location = None): # adds a new bot to the botlist and therefore botcommander.
+def add(botname, client, url = None, location = None, token = None): # adds a new bot to the botlist and therefore botcommander.
   """
   Adds a bot to the botlist.
 
@@ -321,8 +352,15 @@ def add(botname, client, location = None): # adds a new bot to the botlist and t
   if(bot != None):
     response_message(client, f"Bot {botname} already exists.")
     return
+  # Bot name system could be changed or made more intuitive. Right now it requires the bot name to be the program which will be executed.
+
+
   # around here need to add a system that checks for the github page or the file to find the actual bot.
   # and manage to run it without errors.
+  # filelocation, msg = clone_repo(url, filelocation)
+  # add token into the file
+  # save_token(filelocation, token)
+
 
   # else, add to database and refresh database variable
   # this .py stuff is likely useless and irrelevant
@@ -589,9 +627,9 @@ main()
 #      5-) Status formatting                        DONE
 #      6-) Making functions usable by the clients   DONE - Needs bots to be able to run. 
 #      7-) Testing                                  DONE
-#      7.1-) Github Connection                      D
-#      7.2-) .env injection (token)                 D
-#      7.3-) Testing Github                         D
+#      7.1-) Github Connection                      DONE
+#      7.2-) .env injection (token)                 DONE
+#      7.3-) Testing Github (test most processes in this part!!)                        D
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      8-) Database setup, connection (SQLite (?)) (maybe pandas?)
 #      9-) Data check function
