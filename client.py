@@ -39,7 +39,7 @@ def handle_recv(client_socket, msg):
 
     elif msgtype == "erro":
       error = Fore.RED + "Error message from server: " + Fore.RESET
-      print(f"{error}{msg[6:-1]}")
+      print(f"{error}{msg[4:]}")
 
     elif msgtype == "stat":
       message = msg[msg.rfind(":")+2]
@@ -50,8 +50,8 @@ def handle_recv(client_socket, msg):
       print(f"Status update: {message[6:-1]}")
       
     elif msgtype == "resp":
-      msg = msg[6:-1]
-      msg = Fore.WHITE + msg + Fore.RESET 
+      msg = msg[4:]
+      msg = Fore.YELLOW + msg + Fore.RESET 
       print(f"Response message: {msg}")
 
 

@@ -4,6 +4,7 @@ import socket
 import threading
 import subprocess
 import os
+import inspect
 # Scheduling
 from apscheduler.schedulers.background import BackgroundScheduler # pip install apscheduler
 import datetime
@@ -14,7 +15,6 @@ from sqlite3 import Error
 import git # pip install gitpython
 # UI #
 from colorama import Fore, Style, init # pip install colorama
-
 init(autoreset=True)  # Initialize Colorama to fix Windows CMD issues
 import re             # client message parsing
 
@@ -28,6 +28,7 @@ import re             # client message parsing
 # This system would need the global connection system to be done.
 # Users of these bots could send applications for different levels of usership.
 # Later on they can view or change data of the bots they have access to according to the usership.
+# For UI look up stringlit(?)
 
 # Variables
 HOST = '0.0.0.0'  # Bind to all interfaces
@@ -126,12 +127,18 @@ def parse_message(message): # looks good for now
 
   if func_name not in ALLOWED_FUNCTIONS:
     return None, None  # Function not allowed
-
-  # Convert the arguments string into actual Python objects
+  
+  # Get argument count
+  sig = inspect.signature(eval(func_name))
+  param_count = len([
+    param for param in sig.parameters.values()
+    if param.default == inspect.Parameter.empty  # Count only required args
+  ])
   try:
-    args = eval(f"({args_str})")  # Unsafe in some cases, but okay for controlled inputs
-    if not isinstance(args, tuple):  # Ensure args is always a tuple
-      args = (args,)
+    if(param_count == args_str.count(",")+2): # Check if the number of arguments is correct (last one is always going to be the client)
+      args = args_str.split(", ")
+    else:
+      raise Exception("Incorrect number of arguments.")
   except Exception as e:
     print(f"Error parsing arguments: {e}")
     return None, None
@@ -301,6 +308,7 @@ def handle_clientactions(client, message):
   """
   # Parse the message
   func_name, args = parse_message(message)
+  print(f'Function name: {func_name}, Args: {args}')
 
   if not func_name:
     error_message(client, "Invalid command or unauthorized function.")
@@ -338,7 +346,7 @@ def menu():
   # this is necessary to show the user what the inputs should be for every function and what the functions are.
   return
 # Basic Bot Actions
-def add(botname, client, url = None, location = None, token = None): # adds a new bot to the botlist and therefore botcommander.
+def add(botname, url, location, token, client): # adds a new bot to the botlist and therefore botcommander.
   """
   Adds a bot to the botlist.
 
@@ -397,12 +405,12 @@ def start(botname, client):
   Starts a given bot.
   """
   global online_botlist
-  echo_message(client, f"Starting bot {botname}")
+  response_message(client, f"Starting bot {botname}")
   
   bot = botfinder(botname)
   try:
     # check if bot exists
-    if (bot not in botlist):
+    if (bot == None):
       # if not, return error
       response_message(client, "Bot does not exist.")
       return
@@ -462,7 +470,7 @@ def update(botname, client):
     # if online, stop bot
     stop(botname, client)
   # update bot from github
-def schedule_maintenance(botname, client, time): # Set maintenance time (YYYY, MM, DD, HH, MM) #bot name is also used on a switch
+def schedule_maintenance(botname, time, client): # Set maintenance time (YYYY, MM, DD, HH, MM) #bot name is also used on a switch
   """
   Used to set dates for maintainence
 
@@ -577,6 +585,7 @@ def response_message(client, message):
 
 
 def main():
+  global botlist, server_socket, clientlist, scheduler
   if __name__ == "__main__":
     server_socket, botlist = start_server()
   else:
