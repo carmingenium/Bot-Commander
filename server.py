@@ -649,7 +649,7 @@ main()
 #      7-) Testing                                  DONE
 #      7.1-) Github Connection                      DONE
 #      7.2-) .env injection (token)                 DONE
-#      7.3-) Testing Github                         D
+#      7.3-) Testing Github                         DONE
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      8-) Database setup, connection (SQLite (?)) (maybe pandas?)
 #      9-) Data check function
