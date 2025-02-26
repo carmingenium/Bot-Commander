@@ -459,6 +459,7 @@ def stop(botname, client):
   online_botlist[online_botlist.index(botname)].terminate()
   online_botlist[online_botlist.index(botname)].wait()
   online_botlist.remove(botname)
+  bot.update_status("offline")
   # NON-FUNCTIONAL CODE - FIX ASAP ^^^^
 
   response_message(client, f"Stopped bot {botname}")
@@ -614,29 +615,14 @@ def main():
     # wait x seconds
     time.sleep(15)
     # bot checking functionality (not defined, not used anywhere else)
-    check = False
-    for bot in botlist:
-      if bot.get_status == "online" and bot not in online_botlist: # online_botlist has processes, this should not work? but the logic will be like this
-        # update check
-        check = True
-        # update botlist
-        # run the bot or if the bot is running restart it maybe?
+    # check = False
 
-        # update bot status for every client.
-        print(f"Not implemented feature: Bot status changed to {bot.get_status()}")
-        pass
-      elif bot.get_status() == "offline" and bot in online_botlist:
-        # update check
-        check = True
-        # update botlist
-        # stop the bot
-
-        # update bot status for every client.
-        print(f"Not implemented feature: Bot status changed to {bot.get_status()}")
-        pass
-    if (check):
-      show_status(clientlist, botlist)
-      check = False
+    # if there is a status change check system needed, it should be put here.
+    # I decided that while it is still not finalized, there is no need to waste time here.
+    show_status(clientlist, botlist)
+    # if (check):
+    #   show_status(clientlist, botlist)
+    #   check = False
 
 main()
 # TBD:
