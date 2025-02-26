@@ -8,7 +8,7 @@ import inspect
 # Scheduling
 from apscheduler.schedulers.background import BackgroundScheduler # pip install apscheduler
 import datetime
-# DATABASE START # PLANNING TO SETUP DATABASE PART IN ANOTHER SCRIPT TO MODULARIZE TWO PARTS OF THE CODE, PLUS HOPING TO HAVE EASIER TIME TESTING
+# DATABASE START
 import sqlite3
 from sqlite3 import Error
 # GITHUB
@@ -22,9 +22,10 @@ import re             # client message parsing
 #
 # 1-) Exclusivity, Data Integrity
 #   Multiple layers of connection, not every client should reach every data. And client should mostly be readonly (tbd)
+#   This could be done when and if the program moves onto web and hosted globally
 
 # User System
-# After version 1.0 has been finished, a new user system could be implemented.
+# After version 1.0 has been finished, a new user system could be implemented. (could also be moved onto web)
 # This system would need the global connection system to be done.
 # Users of these bots could send applications for different levels of usership.
 # Later on they can view or change data of the bots they have access to according to the usership.
@@ -109,6 +110,11 @@ def convert_to_datetime(date_string):
     return None
 def botfinder(botname):
   for bot in botlist:
+    if bot.get_name() == botname:
+      return bot
+  return None
+def botfinder_state(botname,statelist):
+  for bot in statelist:
     if bot.get_name() == botname:
       return bot
   return None
@@ -200,15 +206,17 @@ class Bot:
   name = ""
   status = ""
   location = ""
+  token = ""
   # might add a github link var here.
   # with the github link var, location could be created by the commander for any added bot.
-  def __init__(self, name, location = None, status = "offline"):
+  def __init__(self, name, token, location = None, status = "offline"):
     """
     Constructor for the Bot class.
     """
     self.name = name
+    self.token = token
     self.status = status
-    self.location = location
+    self.location = location    
   def get_name(self):
     return self.name
   def get_status(self):
@@ -621,15 +629,13 @@ def main():
     for bot in botlist:
       #     # ERROR #
       #     Traceback (most recent call last):
-      # File "C:\Users\dagha\Desktop\Python Bot\Bot-Commander\server.py", line 634, in <module>
-      #   main()
       # File "C:\Users\dagha\Desktop\Python Bot\Bot-Commander\server.py", line 622, in main
       #   if bot.get_status() != statelist[botlist.index(bot)].get_status():
-      if bot.get_status() != statelist[botlist.index(bot)].get_status():
+      if bot.get_status() != botfinder_state(bot.get_name(),statelist).get_status(): # error fix. not tested
         # update check
         check = True
         # update botlist
-        statelist[botlist.index(bot)].update_status(bot.get_status())
+        botfinder_state(bot.get_name(),statelist).update_status(bot.get_status())
         # update bot status for every client.
         print(f"Not implemented feature: Bot status changed to {bot.get_status()}")
         pass
