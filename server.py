@@ -113,11 +113,6 @@ def botfinder(botname):
     if bot.get_name() == botname:
       return bot
   return None
-def botfinder_state(botname,statelist):
-  for bot in statelist:
-    if bot.get_name() == botname:
-      return bot
-  return None
 def parse_message(message): # looks good for now
   """
   Parses a client message in the format 'func(a, b, c)'.
@@ -192,7 +187,7 @@ class Bot:
   status : str
     The status of the bot (online or offline)
   location : str
-    The location of the bot script
+    The location of the bot script (.py file to differentiate from other bots)
   
   Methods:
   --------
@@ -205,7 +200,7 @@ class Bot:
   """
   name = ""
   status = ""
-  location = ""
+  location = "" # location should be the location of the .py file so that name can be differentiated from the file (ease of use)
   token = ""
   # might add a github link var here.
   # with the github link var, location could be created by the commander for any added bot.
@@ -613,12 +608,6 @@ def main():
   scheduler = BackgroundScheduler()
   scheduler.start()
   # not fully decided on set interval maintenance, not sure if needed. skipping for now.
-
-  # setup a current state for bots
-  statelist = []
-  for bot in botlist:
-    statelist.append(bot)
-
   # bot status checking and updating loop
   while True:
     # separated listeners from main thread to check bot changes every x seconds.
@@ -627,15 +616,21 @@ def main():
     # bot checking functionality (not defined, not used anywhere else)
     check = False
     for bot in botlist:
-      #     # ERROR #
-      #     Traceback (most recent call last):
-      # File "C:\Users\dagha\Desktop\Python Bot\Bot-Commander\server.py", line 622, in main
-      #   if bot.get_status() != statelist[botlist.index(bot)].get_status():
-      if bot.get_status() != botfinder_state(bot.get_name(),statelist).get_status(): # error fix. not tested
+      if bot.get_status == "online" and bot not in online_botlist: # online_botlist has processes, this should not work? but the logic will be like this
         # update check
         check = True
         # update botlist
-        botfinder_state(bot.get_name(),statelist).update_status(bot.get_status())
+        # run the bot or if the bot is running restart it maybe?
+
+        # update bot status for every client.
+        print(f"Not implemented feature: Bot status changed to {bot.get_status()}")
+        pass
+      elif bot.get_status() == "offline" and bot in online_botlist:
+        # update check
+        check = True
+        # update botlist
+        # stop the bot
+
         # update bot status for every client.
         print(f"Not implemented feature: Bot status changed to {bot.get_status()}")
         pass
