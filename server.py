@@ -322,6 +322,7 @@ def handle_clientactions(client, message):
     "stop": stop,
     "update": update,
     "schedule": schedule_maintenance,
+    # missing extra scheduling options, they will be unnecessary for a while
     "checkdata": checkdata
   }
 
@@ -346,7 +347,7 @@ def menu():
   # this is necessary to show the user what the inputs should be for every function and what the functions are.
   return
 # Basic Bot Actions
-def add(botname, url, location, token, client): # adds a new bot to the botlist and therefore botcommander.
+def add(botname, url, token, client): # adds a new bot to the botlist and therefore botcommander.
   """
   Adds a bot to the botlist.
 
@@ -364,17 +365,21 @@ def add(botname, url, location, token, client): # adds a new bot to the botlist 
 
 
   # around here need to add a system that checks for the github page or the file to find the actual bot.
-  # and manage to run it without errors.
-  # filelocation, msg = clone_repo(url, filelocation)
-  # add token into the file
-  # save_token(filelocation, token)
+  try:
+    clone_repo(url, "C:/Users/dagha/Desktop/BOTS")
+    response_message(client, f"Repository being cloned into 'C:/Users/dagha/Desktop/BOTS'")
+    create_env_file("C:/Users/dagha/Desktop/BOTS", token)
+    response_message(client, f".env file created at 'C:/Users/dagha/Desktop/BOTS'")
+  except Error as e:
+    response_message(client, f"Error cloning repository: {e}")
+    return
 
 
   # else, add to database and refresh database variable
   # this .py stuff is likely useless and irrelevant
   if (botname[-3:] != ".py"): # check if .py is in the name.
     botname = botname + ".py"
-  botlist.append(Bot(botname, location))
+  botlist.append(Bot(botname, "C:/Users/dagha/Desktop/BOTS"))
   # add to database 
   # refresh database variable (sync with database)
   response_message(client ,f"Added bot {botname}")
@@ -547,7 +552,7 @@ def show_status():
   """
   Called on every bot status change.
 
-  Creates a formatted message, which is sent to all clients.
+  Creates a formatted message, which is sent to all active clients.
   """
   # show online / offline status 
   # Also show basic data for every bot that is held on the database of server.
@@ -614,6 +619,12 @@ def main():
     # bot checking functionality (not defined, not used anywhere else)
     check = False
     for bot in botlist:
+      #     # ERROR #
+      #     Traceback (most recent call last):
+      # File "C:\Users\dagha\Desktop\Python Bot\Bot-Commander\server.py", line 634, in <module>
+      #   main()
+      # File "C:\Users\dagha\Desktop\Python Bot\Bot-Commander\server.py", line 622, in main
+      #   if bot.get_status() != statelist[botlist.index(bot)].get_status():
       if bot.get_status() != statelist[botlist.index(bot)].get_status():
         # update check
         check = True
@@ -638,7 +649,14 @@ main()
 #      7-) Testing                                  DONE
 #      7.1-) Github Connection                      DONE
 #      7.2-) .env injection (token)                 DONE
-#      7.3-) Testing Github (test most processes in this part!!)                        D
+#      7.3-) Testing Github                         D
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
 #      8-) Database setup, connection (SQLite (?)) (maybe pandas?)
 #      9-) Data check function
+
+
+
+# NOTES #
+# Client can send messages before their last task is completely finished. 
+  # Because the message system is based on a timer.
+  # Propably need a proper algorithm to keep track of other processes and threads.
