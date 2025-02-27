@@ -9,8 +9,7 @@ import inspect
 from apscheduler.schedulers.background import BackgroundScheduler # pip install apscheduler
 import datetime
 # DATABASE START
-import sqlite3
-from sqlite3 import Error
+import database # database.py
 # GITHUB
 import git # pip install gitpython
 # UI #
@@ -373,7 +372,7 @@ def add(botname, url, token, client): # adds a new bot to the botlist and theref
     response_message(client, f"Repository being cloned into 'C:/Users/dagha/Desktop/BOTS'")
     create_env_file("C:/Users/dagha/Desktop/BOTS", token)
     response_message(client, f".env file created at 'C:/Users/dagha/Desktop/BOTS'")
-  except Error as e:
+  except Exception as e:
     response_message(client, f"Error cloning repository: {e}")
     return
 
@@ -638,7 +637,7 @@ main()
 #      7.2-) .env injection (token)                 DONE
 #      7.3-) Testing Github                         DONE
 #      Database moved to last, because development is moving on a test machine and database implementation will slow down the process for now.
-#      8-) Database setup, connection (SQLite (?)) (maybe pandas?)
+#      8-) Database setup, connection (SQLite)      DONE
 #      9-) Data check function
 
 
