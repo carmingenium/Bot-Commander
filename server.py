@@ -14,8 +14,8 @@ from sqlite3 import Error
 # GITHUB
 import git # pip install gitpython
 # UI #
-from colorama import Fore, Style, init # pip install colorama
-init(autoreset=True)  # Initialize Colorama to fix Windows CMD issues
+from colorama import Fore, Style, init # pip install colorama                         # CHECK IF NECESSARY BEFORE FINISHING!!!
+init(autoreset=True)  # Initialize Colorama to fix Windows CMD issues                 # CHECK IF NECESSARY BEFORE FINISHING!!!
 import re             # client message parsing
 
 # Security Notes ##
