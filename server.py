@@ -197,16 +197,18 @@ class Bot:
   update_bot(name, location)
   update_status(status)
   """
-  name = ""
-  status = ""
-  location = "" # location should be the location of the .py file so that name can be differentiated from the file (ease of use)
-  token = ""
+  id: int
+  name: str
+  status: str
+  location: str # location should be the location of the .py file so that name can be differentiated from the file (ease of use)
+  token: str
   # might add a github link var here.
   # with the github link var, location could be created by the commander for any added bot.
-  def __init__(self, name, token, location = None, status = "offline"):
+  def __init__(self, name, token, bot_id, location = None, status = "offline"): # NEED TO MATCH ALL PARAMETERS FOR ALL THE DIFFERENT FUNCTIONS FOR EASE OF DEVELOPMENT
     """
     Constructor for the Bot class.
     """
+    self.id = bot_id
     self.name = name
     self.token = token
     self.status = status
@@ -376,6 +378,17 @@ def add(botname, url, token, client): # adds a new bot to the botlist and theref
     response_message(client, f"Error cloning repository: {e}")
     return
 
+
+  # need to find a good way to add bots to database. this one is okay
+    # but trying to retrieve the ID and creating another bot here is a little awkward
+    # after adding a bot to the database, all the bot info can be pulled to update the whole of botlist
+    # this ones more expensive but easier to use. can be easily optimized if there are performance problems
+  # # Add bot to the database and retrieve the assigned ID
+  # bot_id = database.add_bot(botname, "offline", "C:/Users/dagha/Desktop/BOTS", "testtoken") # TEST VALUES!!!!
+
+  # # Create a Bot object using the assigned ID
+  # new_bot = Bot(botname, token, location="C:/Users/dagha/Desktop/BOTS", status="offline")
+  # new_bot.id = bot_id  # Assign the ID retrieved from the database # this part should be changed VARIABLES SHOULD BE PRIVATE
 
   # else, add to database and refresh database variable
   # this .py stuff is likely useless and irrelevant

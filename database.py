@@ -22,14 +22,22 @@ def init_db():
   conn.commit()
   conn.close()
 
-def add_bot(name, status):
-  """Insert a new bot into the database."""
+def add_bot(name, status, location, token): # could move the default values to parameters on the function
+  """Insert a new bot into the database.
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'offline',
+      location TEXT NOT NULL,
+      token TEXT NOT NULL,
+      last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  """
   conn = sqlite3.connect(DB_PATH)
   cursor = conn.cursor()
   cursor.execute('''
-  INSERT INTO bots (name, status)
-  VALUES (?, ?)
-  ''', (name, status))
+  INSERT INTO bots (name, status, location, token)
+  VALUES (?, ?, ?, ?)
+  ''', (name, status, location, token))
   conn.commit()
   conn.close()
 
