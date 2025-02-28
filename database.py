@@ -3,6 +3,9 @@ import os
 
 # Database file path
 DB_PATH = os.path.join('data', 'bot_commander.db')
+# Could set a login db also later on
+
+
 
 def init_db():
   """Initialize the database and create tables if they don't exist."""
@@ -46,6 +49,6 @@ def get_bots():
   conn = sqlite3.connect(DB_PATH)
   cursor = conn.cursor()
   cursor.execute('SELECT * FROM bots')
-  bots = cursor.fetchall()
+  bots = cursor.fetchall() # fetchall returns an array of tuples, has all the data in tuple format
   conn.close()
   return bots

@@ -204,7 +204,7 @@ class Bot:
   token: str
   # might add a github link var here.
   # with the github link var, location could be created by the commander for any added bot.
-  def __init__(self, name, token, bot_id, location = None, status = "offline"): # NEED TO MATCH ALL PARAMETERS FOR ALL THE DIFFERENT FUNCTIONS FOR EASE OF DEVELOPMENT
+  def __init__(self, bot_id, name, token, location = None, status = "offline"): # NEED TO MATCH ALL PARAMETERS FOR ALL THE DIFFERENT FUNCTIONS FOR EASE OF DEVELOPMENT
     """
     Constructor for the Bot class.
     """
@@ -258,7 +258,11 @@ def start_server():
   # load botlist -string list- from database. !! this is changed but need a format to turn bots into string data
   
   # for now, botlist is going to be manually set, because database implementation moved to last step.
-  botlist = [] # cant put strings and bot objects need subprocesses, empty for now.
+  botlist = []
+  # might give an error as its empty for now.
+  db_botlist = database.get_bots() # this returns an array of tuples, we dont need all the data
+  botlist = [Bot(id=row[0], name=row[1], status=row[2], location=row[3]) for row in db_botlist]
+
   return server_socket, botlist
 # Function to accept clients - listener
 def accept_clients(server_socket):
@@ -384,19 +388,16 @@ def add(botname, url, token, client): # adds a new bot to the botlist and theref
     # after adding a bot to the database, all the bot info can be pulled to update the whole of botlist
     # this ones more expensive but easier to use. can be easily optimized if there are performance problems
   # # Add bot to the database and retrieve the assigned ID
-  # bot_id = database.add_bot(botname, "offline", "C:/Users/dagha/Desktop/BOTS", "testtoken") # TEST VALUES!!!!
+  bot_id = database.add_bot(botname, "offline", "C:/Users/dagha/Desktop/BOTS", "testtoken") # TEST VALUES!!!!
 
   # # Create a Bot object using the assigned ID
-  # new_bot = Bot(botname, token, location="C:/Users/dagha/Desktop/BOTS", status="offline")
-  # new_bot.id = bot_id  # Assign the ID retrieved from the database # this part should be changed VARIABLES SHOULD BE PRIVATE
+  new_bot = Bot(bot_id, botname, token, location="C:/Users/dagha/Desktop/BOTS", status="offline")
 
-  # else, add to database and refresh database variable
+
   # this .py stuff is likely useless and irrelevant
   if (botname[-3:] != ".py"): # check if .py is in the name.
     botname = botname + ".py"
-  botlist.append(Bot(botname, "C:/Users/dagha/Desktop/BOTS"))
-  # add to database 
-  # refresh database variable (sync with database)
+  botlist.append(new_bot)
   response_message(client ,f"Added bot {botname}")
   return
 def remove(botname, client):
