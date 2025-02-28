@@ -237,6 +237,7 @@ class Bot:
     self.location = location
   def update_status(self, status):
     self.status = status
+    database.update_bot_status(self.id, status)
 
 # Connection functions
 # Server needs to be accessible from anywhere, so we use '0.0.0.0' as the host to bind to all available interfaces.
@@ -450,6 +451,8 @@ def start(botname, client):
       raise Exception(err)    
   except Exception as e:
     response_message(client, f"Error starting bot {botname}: {e}")
+  bot.update_status("online")
+  refresh_botlist()
   response_message(client, f"Started bot {botname}")
 def stop(botname, client):
   """
