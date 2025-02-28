@@ -172,7 +172,10 @@ def create_env_file(directory, token):
     env_file.write(f"{token}\n")
   msg = ".env file created at {env_file_path}"
   return msg
-
+def refresh_botlist():
+  global botlist
+  db_botlist = database.get_bots() # this returns an array of tuples, we dont need all the data
+  botlist = [Bot(id=row[0], name=row[1], status=row[2], location=row[3]) for row in db_botlist]
 
 # Bot class
 class Bot:
@@ -219,6 +222,8 @@ class Bot:
     return self.status
   def get_location(self):
     return self.location
+  def get_id(self):
+    return self.id
   def update_bot(self, name, location):
     """
     Updates the bot's name and location.
@@ -250,18 +255,14 @@ def start_server():
   # listener done.
   
   # global variables initializing.
-  global clientlist, online_botlist
+  global clientlist, online_botlist, botlist
   clientlist = []
   online_botlist = []
-  
-  # connecting to database
-  # load botlist -string list- from database. !! this is changed but need a format to turn bots into string data
-  
-  # for now, botlist is going to be manually set, because database implementation moved to last step.
   botlist = []
+  # connecting to database
+  
   # might give an error as its empty for now.
-  db_botlist = database.get_bots() # this returns an array of tuples, we dont need all the data
-  botlist = [Bot(id=row[0], name=row[1], status=row[2], location=row[3]) for row in db_botlist]
+  refresh_botlist()
 
   return server_socket, botlist
 # Function to accept clients - listener
@@ -418,9 +419,12 @@ def remove(botname, client):
   # check if bot is online
   if(bot.get_status() == "online"):
   #   if online, return error
-    response_message(client, f"Bot {botname} is online. Stop the bot before removing.")
-    return
-  # remove bot from database and refresh database variable
+    response_message(client, f"Bot {botname} is online. Stopping the bot...")
+    stop(botname, client)
+  # remove bot from database and refresh botlist from database
+  database.remove_bot(bot.get_id())
+  refresh_botlist()
+  response_message(client, f"Removed bot {botname}")
 def start(botname, client):
   """
   Starts a given bot.
@@ -621,6 +625,11 @@ def main():
   # setting up maintenance thread
   scheduler = BackgroundScheduler()
   scheduler.start()
+
+  # planning to setup a "logging" thread and system here.
+
+
+
   # not fully decided on set interval maintenance, not sure if needed. skipping for now.
   # bot status checking and updating loop
   while True:

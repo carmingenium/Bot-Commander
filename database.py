@@ -52,3 +52,11 @@ def get_bots():
   bots = cursor.fetchall() # fetchall returns an array of tuples, has all the data in tuple format
   conn.close()
   return bots
+
+def remove_bot(bot_id):
+  """Remove a bot from the database."""
+  conn = sqlite3.connect(DB_PATH)
+  cursor = conn.cursor()
+  cursor.execute('DELETE FROM bots WHERE id = ?', (bot_id,))
+  conn.commit()
+  conn.close()
