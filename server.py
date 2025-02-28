@@ -473,15 +473,18 @@ def stop(botname, client):
     response_message(client, f"Bot '{botname}' is already offline.")
     return
   # before stopping, do any saving or take needed precautions.
-  #empty
-  # stop bot
-  # RESEARCH SUBPROCESSES, this should errors.
-  online_botlist[online_botlist.index(botname)].terminate()
-  online_botlist[online_botlist.index(botname)].wait()
-  online_botlist.remove(botname)
-  bot.update_status("offline")
-  # NON-FUNCTIONAL CODE - FIX ASAP ^^^^
+  # it would be best to stop the bot from botside, so that it can save its data.
+  # I think creating a bot commander discord bot for this is a solid way to do this.
+  # if(bot.get_name(botcommander.py)):
+  #   botcommander.save_data()
+  #   botcommander.selfshutdown()
+  # else:
+  # botcommander.shutdown(bot)
 
+  # stop bot
+  bot.update_status("offline")
+  database.update_bot_status(bot.get_id(), "offline")
+  refresh_botlist()
   response_message(client, f"Stopped bot {botname}")
 def update(botname, client):
   """
