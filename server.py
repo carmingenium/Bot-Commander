@@ -472,6 +472,7 @@ def stop(botname, client):
     # if offline, return error
     response_message(client, f"Bot '{botname}' is already offline.")
     return
+  
   # before stopping, do any saving or take needed precautions.
   # it would be best to stop the bot from botside, so that it can save its data.
   # I think creating a bot commander discord bot for this is a solid way to do this.
@@ -675,3 +676,7 @@ main()
 # Client can send messages before their last task is completely finished. 
   # Because the message system is based on a timer.
   # Propably need a proper algorithm to keep track of other processes and threads.
+
+# Planning to remove the Bot class. all the data, including status, can be kept in the database.
+  # Ease of development and less code to maintain.
+  
